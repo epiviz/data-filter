@@ -1,0 +1,170 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../iron-label/iron-label.html">
+<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
+
+<dom-module id="data-filter">
+  <template>
+
+    <style>
+        :host {
+            display: inline-block;
+            width: 100%;
+        }
+
+        .flex-horizontal {
+            @apply --layout-horizontal;
+        }
+        .flexchild {
+            @apply --layout-flex;
+        }
+        .flex2child {
+            @apply --layout-flex-2;
+        }
+
+        .flex-vertical {
+            @apply --layout-vertical;
+            /* height: 220px; */
+        }
+        .flexchild-vertical {
+            @apply --layout-flex;
+        }
+
+        /* .container {
+            width: 100%;
+            padding: 5px;
+        } */
+    </style>
+    <div class="container flex-horizontal">
+        <div class="flexchild">
+            <div class="flex-vertical" id="filterContainer">
+                <form is="iron-form" id="form">
+                    <template is="dom-repeat" items="{{_attributes}}">
+                        <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
+                            <div class="flexchild-vertical">
+                                <paper-toggle-button name="{{item.id}}" label="{{item.name}}"></paper-toggle-button>
+                                <iron-label for="{{item.id}}">{{input.label}}</iron-label>
+                            </div>
+                        </template>
+                        <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
+                            <div class="flexchild-vertical">
+                                <paper-dropdown-input name="{{item.id}}" label="{{item.name}}" items="{{item.values}}"></paper-dropdown-input>
+                            </div>
+                        </template>
+                        <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
+                            <div class="flexchild-vertical">
+                                <paper-input name="{{item.id}}" type="number" label="{{item.name}}"></paper-input>
+                            </div>
+                        </template>                        
+                        <div class="flexchild-vertical">
+                            {{item.name}}
+                        </div>
+                    </template>
+                </form>
+            </div>
+        </div>
+        <div class="flex2child" id="dataContainer"></div>
+    </div>
+  </template>
+
+  <script>
+  Polymer({
+    is: 'data-filter',
+    properties: {
+        data: {
+            type: Object,
+            notify: true,
+            observer: "_dataChanged"
+        },
+
+        showFilterBar: {
+            type: Boolean,
+            value: true
+        },
+
+        _attributes: {
+            type: Array,
+            value: [],
+            notify: true
+        }
+    },
+
+    _settingType: function(type, expected) {
+        if (type == expected) {
+            return true;
+        }
+
+        return false;
+    },
+
+    _dataChanged: function(newData, oldData) {
+
+    },
+
+    _buildAttributes: function(data) {
+
+        var self = this;
+        var attributes = [];
+
+        Object.keys(self.data).forEach(function(key) {
+            var isNum = !data[key].some(isNaN);
+
+            if(isNum) {
+                attributes.push({
+                    "name": key,
+                    "type": "number",
+                    "values": [data[key].reduce(function(a,b) { return Math.max(a, b); }),
+                    data[key].reduce(function(a,b) { return Math.min(a, b); })]
+                });
+            }
+            else {
+                var isBoolean = !data[key].some(isNaN);
+
+                if(isBoolean) {
+                    attributes.push({
+                        "name": key,
+                        "type": "boolean",
+                        "values": [true, false]
+                    });
+                }
+                else {
+                    attributes.push({
+                        "name": key,
+                        "type": "category",
+                        "values": data[key].filter(function (x, i, a) { return a.indexOf(x) == i; })
+                    });
+                }
+            }
+        });
+
+        return attributes;
+    },
+
+    _buildFilterMenu: function(attributes) {
+
+    },
+
+    // created: function() {},
+
+    ready: function() {
+        var self = this;
+
+        // find types of the data object.
+
+        var attributes = self._buildAttributes(self.data);
+        self._attributes = attributes;
+        // self._buildFilterMenu(attributes);
+    },
+
+    attached: function() {
+
+    }
+
+
+  });
+  </script>
+
+</dom-module>
