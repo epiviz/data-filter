@@ -5,6 +5,11 @@
 <link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
+<link rel="import" href="../iron-form/iron-form.html">
+
+<!-- <link rel="import" href="../iron-list/iron-list.html"> -->
+<!-- <link rel="import" href="../iron-dropdown/iron-dropdown.html"> -->
+
 
 <dom-module id="data-filter">
   <template>
@@ -22,7 +27,7 @@
             @apply --layout-flex;
         }
         .flex2child {
-            @apply --layout-flex-2;
+            @apply --layout-flex-4;
         }
 
         .flex-vertical {
@@ -32,6 +37,22 @@
         .flexchild-vertical {
             @apply --layout-flex;
         }
+
+        table.gridtable {
+            width: 100%;
+            color:#333333;
+        }
+        table.gridtable th {
+            text-align: center;
+            padding: 2px;
+        }
+        table.gridtable td {
+            padding: 2px;
+        }
+
+        /* table > thead {
+            background: 
+        } */
 
         /* .container {
             width: 100%;
@@ -45,18 +66,18 @@
                     <template is="dom-repeat" items="{{_attributes}}">
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                             <div class="flexchild-vertical">
-                                <paper-toggle-button name="{{item.id}}" label="{{item.name}}"></paper-toggle-button>
+                                <paper-toggle-button name="{{item.name}}" label="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
                                 <iron-label for="{{item.id}}">{{input.label}}</iron-label>
                             </div>
                         </template>
                         <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                             <div class="flexchild-vertical">
-                                <paper-dropdown-input name="{{item.id}}" label="{{item.name}}" items="{{item.values}}"></paper-dropdown-input>
+                                <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}"></paper-dropdown-input>
                             </div>
                         </template>
                         <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
                             <div class="flexchild-vertical">
-                                <paper-input name="{{item.id}}" type="number" label="{{item.name}}"></paper-input>
+                                <paper-input on-change="addFilter" name="{{item.name}}" type="number" label="{{item.name}}"></paper-input>
                             </div>
                         </template>                        
                         <div class="flexchild-vertical">
@@ -66,7 +87,31 @@
                 </form>
             </div>
         </div>
-        <div class="flex2child" id="dataContainer"></div>
+
+        <array-selector id="selector" items="{{data}}" selected="{{selectedItems}}" multi toggle></array-selector>
+
+        <div class="flex2child">
+            <table class="gridtable">
+                <thead>
+                    <tr>
+                        <td><input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll"></td>
+                        <template is="dom-repeat" items="[[showColumns]]" as="column">
+                            <td>[[column]]</td>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template id="dataTable" is="dom-repeat" items="{{tableData}}" as="row" initial-count="30">
+                        <tr on-click="toggleSelection">
+                            <td><input type="checkbox" checked$="{{_checkRow(row, selectedItems.*)}}"></td>
+                            <template is="dom-repeat" items="[[showColumns]]" as="column">
+                                <td>[[ _getItem(row, column) ]]</td>
+                            </template> 
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
     </div>
   </template>
 
@@ -75,9 +120,20 @@
     is: 'data-filter',
     properties: {
         data: {
-            type: Object,
+            type: Array,
             notify: true,
             observer: "_dataChanged"
+        },
+
+        tableData: {
+            type: Array,
+            notify: true
+        },
+
+        showColumns: {
+            type: Array,
+            notify: true,
+            value: []
         },
 
         showFilterBar: {
@@ -88,6 +144,11 @@
         _attributes: {
             type: Array,
             value: [],
+            notify: true
+        },
+
+        selectedItems: {
+            type: Array,
             notify: true
         }
     },
@@ -100,28 +161,99 @@
         return false;
     },
 
-    _dataChanged: function(newData, oldData) {
-
+    _getItem: function(row, column) {
+        return row[column];
     },
 
-    _buildAttributes: function(data) {
+    _checkRow: function(row) {
+        return this.$.selector.isSelected(row) ? true : false;
+    },
+
+    _isIndeterminate: function() {
+        if(this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length != this.tableData.length) {
+            return true;
+        }
+        return false;
+    },
+
+    toggleSelection: function(e) {
+        var item = this.$.dataTable.itemForElement(e.target);
+        this.$.selector.select(item);
+        e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
+    },
+
+    addFilter: function(e) {
+        var formVals = this.$.form.serialize();
+        var filters = [];
+        for (var key in formVals) {
+            if(formVals[key]) {
+                if(typeof(formVals[key]) == "string") {
+                    filters.push("item." + key + " == '" + formVals[key] + "'");
+                }
+                else {
+                    filters.push("item." + key + " == " + formVals[key]);
+                }
+            }
+        }
+        
+        if(filters.length > 0) {
+            var fString = filters.join(" && ");
+            this.set("tableData", this.data.filter(item => eval(fString)));
+        }
+    },
+
+    _selectAll: function(e) {
+        var self = this;
+
+        if(e.target.checked) {
+            this.tableData.forEach(function(item) {
+                if(!self._checkRow(item)) { self.$.selector.select(item);}
+            });
+        }
+        else {
+            this.tableData.forEach(function(item) {
+                if(self._checkRow(item)) { self.$.selector.select(item);}
+            });
+        }
+
+        // this.$.dataTable.render();
+    },
+
+    _dataChanged: function(newData, oldData) {
+        var self = this;
+
+        self.tableData = self.data;
+
+        if(self.showColumns.length == 0) {
+            self.set("showColumns", Object.keys(self.tableData[0]));
+        }
+        
+        var attributes = self._buildAttributes(self.tableData, self.showColumns);
+        self._attributes = attributes;
+    },
+
+    _buildAttributes: function(data, columns) {
 
         var self = this;
         var attributes = [];
+        var parsedData = {};
 
-        Object.keys(self.data).forEach(function(key) {
-            var isNum = !data[key].some(isNaN);
+        data.forEach(function(d) { d.checked = false;});
+
+        columns.forEach(function(key) {
+            parsedData[key] = data.map(function(x) { return x[key];});
+            var isNum = !parsedData[key].some(isNaN);
 
             if(isNum) {
                 attributes.push({
                     "name": key,
                     "type": "number",
-                    "values": [data[key].reduce(function(a,b) { return Math.max(a, b); }),
-                    data[key].reduce(function(a,b) { return Math.min(a, b); })]
+                    "values": [parsedData[key].reduce(function(a,b) { return Math.max(a, b); }),
+                    parsedData[key].reduce(function(a,b) { return Math.min(a, b); })]
                 });
             }
             else {
-                var isBoolean = !data[key].some(isNaN);
+                var isBoolean = !parsedData[key].some(isNaN);
 
                 if(isBoolean) {
                     attributes.push({
@@ -134,7 +266,7 @@
                     attributes.push({
                         "name": key,
                         "type": "category",
-                        "values": data[key].filter(function (x, i, a) { return a.indexOf(x) == i; })
+                        "values": parsedData[key].filter(function (x, i, a) { return a.indexOf(x) == i; })
                     });
                 }
             }
@@ -143,28 +275,10 @@
         return attributes;
     },
 
-    _buildFilterMenu: function(attributes) {
-
-    },
-
     // created: function() {},
-
-    ready: function() {
-        var self = this;
-
-        // find types of the data object.
-
-        var attributes = self._buildAttributes(self.data);
-        self._attributes = attributes;
-        // self._buildFilterMenu(attributes);
-    },
-
-    attached: function() {
-
-    }
-
+    // ready: function() {},
+    // attached: function() {}
 
   });
   </script>
-
 </dom-module>
