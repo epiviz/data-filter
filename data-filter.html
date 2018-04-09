@@ -187,6 +187,7 @@
             toggleSelection: function (e) {
                 var item = this.$.dataTable.itemForElement(e.target);
                 this.$.selector.select(item);
+                e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             },
 
             addFilter: function (e) {
