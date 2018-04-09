@@ -55,6 +55,9 @@
                 padding: 2px;
             }
 
+            paper-dropdown-input {
+                width: 100%;
+            }
             /* table > thead {
             background: 
         } */
@@ -174,10 +177,6 @@
                 return row[column];
             },
 
-            _checkRow: function (row) {
-                return this.$.selector.isSelected(row) ? true : false;
-            },
-
             _isIndeterminate: function () {
                 if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length != this.tableData.length) {
                     return true;
@@ -188,7 +187,6 @@
             toggleSelection: function (e) {
                 var item = this.$.dataTable.itemForElement(e.target);
                 this.$.selector.select(item);
-                e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             },
 
             addFilter: function (e) {
@@ -215,11 +213,8 @@
                 var self = this;
 
                 if (e.target.checked) {
-
-                    self.$.selector.clearSelection();
-                    self.set("selectedItems", []);
                     this.tableData.forEach(function (item) {
-                        if (!self._checkRow(item)) { self.$.selector.select(item); }
+                        if (!self.$.selector.isSelected(item)) { self.$.selector.select(item); }
                     });
 
                     var elems = this.querySelectorAll(".row-check");
@@ -227,7 +222,6 @@
                 }
                 else {
                     self.$.selector.clearSelection();
-                    self.set("selectedItems", []);
                     var elems = this.querySelectorAll(".row-check");
                     elems.forEach(function (elem) { elem.checked = false; });
                 }
