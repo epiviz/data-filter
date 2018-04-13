@@ -4,7 +4,10 @@
 <link rel="import" href="../iron-label/iron-label.html">
 <link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
+<link rel="import" href="../paper-tags/paper-tags-dropdown.html">
+<link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../iron-form/iron-form.html">
 
 <!-- <link rel="import" href="../iron-list/iron-list.html"> -->
@@ -55,7 +58,7 @@
                 padding: 2px;
             }
 
-            paper-dropdown-input {
+            paper-tags-dropdown {
                 width: 100%;
             }
             /* table > thead {
@@ -70,6 +73,7 @@
         <div class="container flex-horizontal">
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
+                    <paper-button raised>Reset</paper-button>
                     <form is="iron-form" id="form">
                         <template is="dom-repeat" items="{{_attributes}}">
                             <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
@@ -80,12 +84,16 @@
                             </template>
                             <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                                 <div class="flexchild-vertical">
-                                    <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}" placeholder="Any"></paper-dropdown-input>
+                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" label="{{item.name}}" vertical-offset="60">
+                                    </paper-tags-dropdown>
+                                    <!-- <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}" placeholder="Any"></opaper-dropdown-input> -->
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
                                 <div class="flexchild-vertical">
-                                    <paper-input on-change="addFilter" name="{{item.name}}" type="number" label="{{item.name}}"></paper-input>
+                                    <!-- <paper-input on-change="addFilter" name="{{item.name}}" type="number" label="{{item.name}}"></paper-input> -->
+                                    <paper-tags-input type="{{item.type}}" label="{{item.name}}">
+                                    </paper-tags-input>
                                 </div>
                             </template>
                             <div class="flexchild-vertical">
@@ -131,6 +139,12 @@
         Polymer({
             is: 'data-filter',
             properties: {
+                filters: {
+                    type: Object,
+                    notify: true,
+                    value: {},
+                },
+
                 data: {
                     type: Array,
                     notify: true,
@@ -165,6 +179,11 @@
                 }
             },
 
+            listeners: {
+                "tag-added": "changeFilter",
+                "tag-removed": "changeFilter",
+            },
+
             _settingType: function (type, expected) {
                 if (type == expected) {
                     return true;
@@ -190,27 +209,56 @@
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             },
 
-            addFilter: function (e) {
-                var formVals = this.$.form.serialize();
-                var filters = [];
-                for (var key in formVals) {
-                    if (formVals[key]) {
-                        if (formVals[key] !== "Any") {
-                            if (typeof (formVals[key]) == "string") {
-                                filters.push("item." + key + " == '" + formVals[key] + "'");
+            changeFilter: function (e) {
+                var self = this;
+                console.log(e.detail);
+                var category = e.target.label;
+                var filterString = [];
+
+                if (e.type === "tag-added") {
+                    if (e.target.type === "number") {
+                        if (parseInt(e.detail)) {
+                            this.filters[category].push(parseInt(e.detail));
+                            this.filters["numFilters"]++;
+                        }
+                    } else {
+                        this.filters[category].push(e.detail);
+                        this.filters["numFilters"]++;
+                    }
+                    
+                } else if (e.type === "tag-removed") {
+                    this.filters[category].splice(this.filters[category].indexOf(e.detail), 1);
+                    this.filters["numFilters"]--;
+                }
+
+                for(var key in this.filters) {
+                    if (key !== "numFilters") {
+                        var categoryFilters = []
+                        this.filters[key].forEach(function(val, index) {
+                            if (val !== "Any") {
+                                if (typeof (val) === "string") {
+                                    categoryFilters.push("item." + key + " == '" + val + "'");
+                                } else {
+                                    categoryFilters.push("item." + key + " == " + val);
+                                }
                             }
-                            else {
-                                filters.push("item." + key + " == " + formVals[key]);
-                            }
+                        })
+                        if (categoryFilters.length !== 0) {
+                            filterString.push(categoryFilters);    
                         }
                     }
                 }
-                if (filters.length > 0) {
-                    var fString = filters.join(" && ");
-                    this.set("tableData", this.data.filter(item => eval(fString)));
-                } else {
+
+                if (this.filters["numFilters"] === 0) {
                     this.set("tableData", this.data);
                 }
+                filterString.forEach(function(val, index) {
+                    filterString[index] = "(" + val.join(" || ") + ")";
+                });
+
+                var fString = filterString.join(" && ");
+                console.log(filterString);
+                this.set("tableData", this.data.filter(item => eval(fString)));
             },
 
             _selectAll: function (e) {
@@ -252,11 +300,14 @@
                 var attributes = [];
                 var parsedData = {};
 
+                self.filters["numFilters"] = 0;
+
                 data.forEach(function (d) { d.checked = false; });
 
                 columns.forEach(function (key) {
                     parsedData[key] = data.map(function (x) { return x[key]; });
                     var isNum = !parsedData[key].some(isNaN);
+                    self.filters[key] = [];
 
                     if (isNum) {
                         attributes.push({
