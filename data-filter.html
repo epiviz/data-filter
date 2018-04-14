@@ -248,10 +248,12 @@
                         }
                     }
                 }
-
+                
                 if (this.filters["numFilters"] === 0) {
                     this.set("tableData", this.data);
+                    return;
                 }
+
                 filterString.forEach(function(val, index) {
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
