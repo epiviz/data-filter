@@ -73,7 +73,7 @@
         <div class="container flex-horizontal">
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
-                    <paper-button raised>Reset</paper-button>
+                    <paper-button on-click="resetFilters" raised>Reset</paper-button>
                     <form is="iron-form" id="form">
                         <template is="dom-repeat" items="{{_attributes}}">
                             <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
@@ -211,10 +211,9 @@
 
             changeFilter: function (e) {
                 var self = this;
-                console.log(e.detail);
                 var category = e.target.label;
                 var filterString = [];
-
+                
                 if (e.type === "tag-added") {
                     if (e.target.type === "number") {
                         if (parseInt(e.detail)) {
@@ -248,7 +247,7 @@
                         }
                     }
                 }
-                
+
                 if (this.filters["numFilters"] === 0) {
                     this.set("tableData", this.data);
                     return;
@@ -259,8 +258,18 @@
                 });
 
                 var fString = filterString.join(" && ");
-                console.log(filterString);
                 this.set("tableData", this.data.filter(item => eval(fString)));
+            },
+
+            resetFilters: function(e) {
+                for (var key in this.filters) {
+                    this.filters[key] = [];
+                }
+                this.querySelectorAll("paper-tags-input").forEach(function(elem) {
+                    elem.set("items", []);
+                });
+                this.filters["numFilters"] = 0;
+                this.set("tableData", this.data);
             },
 
             _selectAll: function (e) {
@@ -333,12 +342,11 @@
                             attributes.push({
                                 "name": key,
                                 "type": "category",
-                                "values": ["Any"].concat(parsedData[key].filter(function (x, i, a) { return a.indexOf(x) == i; }))
+                                "values": parsedData[key].filter(function (x, i, a) { return a.indexOf(x) == i; })
                             });
                         }
                     }
                 });
-                console.log(attributes);
                 return attributes;
             }
 
