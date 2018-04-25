@@ -23,6 +23,24 @@
                 width: 100%;
             }
 
+            table.gridtable {
+                width: 100%;
+                color: #333333;
+            }
+
+            table.gridtable th {
+                text-align: center;
+                padding: 2px;
+            }
+
+            table.gridtable td {
+                padding: 2px;
+            }
+
+            paper-tags-dropdown {
+                width: 100%;
+            }
+
             .flex-horizontal {
                 @apply --layout-horizontal;
             }
@@ -44,23 +62,14 @@
                 @apply --layout-flex;
             }
 
-            table.gridtable {
-                width: 100%;
-                color: #333333;
+            .table-headers {
+                font-weight: bold;
             }
 
-            table.gridtable th {
-                text-align: center;
-                padding: 2px;
+            #apply-button {
+                margin-top: 8px;
             }
 
-            table.gridtable td {
-                padding: 2px;
-            }
-
-            paper-tags-dropdown {
-                width: 100%;
-            }
             /* table > thead {
             background: 
         } */
@@ -73,8 +82,8 @@
         <div class="container flex-horizontal">
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
-                    <paper-button on-click="resetFilters" raised>Reset</paper-button>
-                    <paper-button on-click="applyFilters" raised>Apply</paper-button>
+                    <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
+                    <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
                     <form is="iron-form" id="form">
                         <template is="dom-repeat" items="{{_attributes}}">
                             <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
@@ -115,7 +124,7 @@
                                 <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
                             </td>
                             <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                <td>[[column]]</td>
+                                <td class="table-headers">[[column]]</td>
                             </template>
                         </tr>
                     </thead>
