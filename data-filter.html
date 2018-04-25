@@ -74,6 +74,7 @@
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
                     <paper-button on-click="resetFilters" raised>Reset</paper-button>
+                    <paper-button on-click="applyFilters" raised>Apply</paper-button>
                     <form is="iron-form" id="form">
                         <template is="dom-repeat" items="{{_attributes}}">
                             <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
@@ -84,7 +85,7 @@
                             </template>
                             <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                                 <div class="flexchild-vertical">
-                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" label="{{item.name}}" vertical-offset="60">
+                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" label="{{item.name}}" vertical-offset="60" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                     <!-- <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}" placeholder="Any"></opaper-dropdown-input> -->
                                 </div>
@@ -180,8 +181,8 @@
             },
 
             listeners: {
-                "tag-added": "changeFilter",
-                "tag-removed": "changeFilter",
+                "tag-added": "addFilter",
+                "tag-removed": "removeFilter",
             },
 
             _settingType: function (type, expected) {
@@ -209,11 +210,9 @@
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             },
 
-            changeFilter: function (e) {
-                var self = this;
+            addFilter: function(e) {
                 var category = e.target.label;
-                var filterString = [];
-                
+
                 if (e.type === "tag-added") {
                     if (e.target.type === "number") {
                         if (parseInt(e.detail)) {
@@ -224,11 +223,21 @@
                         this.filters[category].push(e.detail);
                         this.filters["numFilters"]++;
                     }
-                    
-                } else if (e.type === "tag-removed") {
+                }
+            },
+
+            removeFilter: function(e) {
+                var category = e.target.label;
+
+                if (e.type === "tag-removed") {
                     this.filters[category].splice(this.filters[category].indexOf(e.detail), 1);
                     this.filters["numFilters"]--;
                 }
+            },
+
+            applyFilters: function () {
+                var self = this;
+                var filterString = [];
 
                 for(var key in this.filters) {
                     if (key !== "numFilters") {
@@ -266,7 +275,7 @@
                     this.filters[key] = [];
                 }
                 this.querySelectorAll("paper-tags-input").forEach(function(elem) {
-                    elem.set("items", []);
+                    elem.removeAll();
                 });
                 this.filters["numFilters"] = 0;
                 this.set("tableData", this.data);
