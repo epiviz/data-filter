@@ -24,6 +24,7 @@
     "iron-label": "PolymerElements/iron-label#1.0.2",
     "iron-list": "1.4",
     "iron-dropdown": "1.5.6",
-    "paper-tags": "AlexanderYZhang/paper-tags#master"
+    "paper-tags": "AlexanderYZhang/paper-tags#master",
+    "lodash": "^4.17.10"
   }
 }

@@ -10,6 +10,8 @@
 <link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../iron-form/iron-form.html">
 
+<script src="../lodash/lodash.js"></script>
+
 <!-- <link rel="import" href="../iron-list/iron-list.html"> -->
 <!-- <link rel="import" href="../iron-dropdown/iron-dropdown.html"> -->
 
@@ -124,12 +126,12 @@
                                 <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
                             </td>
                             <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                <td class="table-headers">[[column]]</td>
+                                <td class="table-headers" id="table-header-{{column}}" on-click="sortColumn">[[column]]</td>
                             </template>
                         </tr>
                     </thead>
                     <tbody>
-                        <template id="dataTable" is="dom-repeat" items="{{tableData}}" as="row" initial-count="30">
+                        <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
                             <tr on-click="toggleSelection">
                                 <td>
                                     <input class="row-check" type="checkbox">
@@ -192,6 +194,14 @@
             listeners: {
                 "tag-added": "addFilter",
                 "tag-removed": "removeFilter",
+            },
+
+            sortColumn: function(e) {
+                var self = this;
+                var category = e.target.id.split('-')[2];
+
+                this.set("tableData", _.sortBy(this.tableData, [category]));
+                this.$.dataTable.render();
             },
 
             _settingType: function (type, expected) {
@@ -366,7 +376,22 @@
                     }
                 });
                 return attributes;
+            },
+            
+            _sortAlphaNum : function(a,b) {
+                var reA = /[^a-zA-Z]/g;
+                var reN = /[^0-9]/g;
+                var aA = String(a).replace(reA, "");
+                var bA = String(b).replace(reA, "");
+                if(aA === bA) {
+                    var aN = parseInt(String(a).replace(reN, ""), 10);
+                    var bN = parseInt(String(b).replace(reN, ""), 10);
+                    return aN === bN ? 0 : aN > bN ? 1 : -1;
+                } else {
+                    return aA > bA ? 1 : -1;
+                }
             }
+
 
             // created: function() {},
             // ready: function() {},
