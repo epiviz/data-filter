@@ -9,6 +9,8 @@
 <link rel="import" href="../paper-tags/paper-tags-dropdown.html">
 <link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../iron-form/iron-form.html">
+<link rel="import" href="../paper-range-slider/paper-range-slider.html">
+<link rel="import" href="../paper-styles/paper-styles.html">
 
 <script src="../lodash/lodash.js"></script>
 
@@ -49,10 +51,12 @@
 
             .flexchild {
                 @apply --layout-flex;
+                padding-right: 10px;
             }
 
             .flex2child {
                 @apply --layout-flex-4;
+                border-left: 1px solid rgba(34,36,38,.15);
             }
 
             .flex-vertical {
@@ -66,6 +70,11 @@
 
             .table-headers {
                 font-weight: bold;
+            }
+
+            .category-headers {
+                color: var(--paper-input-container-input-color, var(--primary-text-color));
+                @apply --paper-font-subhead;
             }
 
             #apply-button {
@@ -90,27 +99,36 @@
                         <template is="dom-repeat" items="{{_attributes}}">
                             <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                                 <div class="flexchild-vertical">
-                                    <paper-toggle-button name="{{item.name}}" label="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
+                                    <iron-label class="category-headers">
+                                        {{item.name}}
+                                    </iron-label>
+                                    <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
                                     <iron-label for="{{item.id}}">{{input.label}}</iron-label>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                                 <div class="flexchild-vertical">
-                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" label="{{item.name}}" vertical-offset="60" horizontal-offset="-150">
+                                    <iron-label class="category-headers">
+                                        {{item.name}}
+                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" vertical-offset="60" horizontal-offset="-150">
                                     </paper-tags-dropdown>
+                                    </iron-label>
+
                                     <!-- <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}" placeholder="Any"></opaper-dropdown-input> -->
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
                                 <div class="flexchild-vertical">
                                     <!-- <paper-input on-change="addFilter" name="{{item.name}}" type="number" label="{{item.name}}"></paper-input> -->
-                                    <paper-tags-input type="{{item.type}}" label="{{item.name}}">
-                                    </paper-tags-input>
+<!--                                     <paper-tags-input type="{{item.type}}" label="{{item.name}}">
+                                    </paper-tags-input> -->
+                                    <iron-label class="category-headers">
+                                        {{item.name}}
+                                    </iron-label>
+                                    <paper-range-slider></paper-range-slider>
+
                                 </div>
                             </template>
-                            <div class="flexchild-vertical">
-                                {{item.name}}
-                            </div>
                         </template>
                     </form>
                 </div>
