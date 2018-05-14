@@ -11,6 +11,9 @@
 <link rel="import" href="../iron-form/iron-form.html">
 <link rel="import" href="../paper-range-slider/paper-range-slider.html">
 <link rel="import" href="../paper-styles/paper-styles.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="../paper-collapse-item/paper-collapse-item.html">
 
 <script src="../lodash/lodash.js"></script>
 
@@ -25,20 +28,51 @@
             :host {
                 display: inline-block;
                 width: 100%;
+                --selection-visibility: hidden;
             }
 
             table.gridtable {
-                width: 100%;
-                color: #333333;
+                margin-left: 10px;
+                width: 98%;
+                /* margin: 25px auto; */
+                border-collapse: collapse;
+                border-spacing: 0;
+                border: 1px solid #eee;
+                border-bottom: 2px solid #4285f4;
+                /* box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.10), 
+                0px 10px 20px rgba(0, 0, 0, 0.05),
+                0px 20px 20px rgba(0, 0, 0, 0.05),
+                0px 30px 20px rgba(0, 0, 0, 0.05);*/
             }
 
-            table.gridtable th {
+            th,
+            td {
+                /* color: #999; */
+                /* border: 1px solid #eee; */
+                padding: 7px 14px;
+                border-collapse: collapse;
                 text-align: center;
-                padding: 2px;
             }
 
-            table.gridtable td {
-                padding: 2px;
+            tr,
+            thead,
+            th {
+                border: 1px solid #eee;
+            }
+
+            tbody tr:hover {
+                background: #4285f4;
+                opacity: 0.7;
+                color: #fff;
+            }
+
+            thead th {
+                cursor: pointer;
+                background: #4285f4;
+                opacity: 0.7;
+                color: #fff;
+                text-transform: uppercase;
+                font-size: 12px;
             }
 
             paper-tags-dropdown {
@@ -56,95 +90,158 @@
 
             .flex2child {
                 @apply --layout-flex-4;
-                border-left: 1px solid rgba(34,36,38,.15);
+                border-left: 1px solid rgba(34, 36, 38, .15);
             }
 
             .flex-vertical {
                 @apply --layout-vertical;
-                /* height: 220px; */
             }
 
             .flexchild-vertical {
                 @apply --layout-flex;
+                border-bottom: 1px solid rgba(34, 36, 38, .15);
+                padding: 10px;
             }
 
             .table-headers {
                 font-weight: bold;
+                white-space: nowrap;
             }
 
             .category-headers {
                 color: var(--paper-input-container-input-color, var(--primary-text-color));
                 @apply --paper-font-subhead;
+                font-size: 12px;
             }
 
             #apply-button {
-                margin-top: 8px;
+                margin-top: 10px;
             }
 
-            /* table > thead {
-            background: 
-        } */
+            .sItem {
+                display: inline-block;
+                padding-left: 15px;
+            }
 
-            /* .container {
-            width: 100%;
-            padding: 5px;
-        } */
+            #selectionContainer {
+                padding: 10px;
+            }
+
+            .sSelect {
+                visibility: var(--selection-visibility);
+            }
+
+            .small-icon {
+                --iron-icon-height: 16px;
+                --iron-icon-width: 16px;
+            }
+
+            paper-collapse-item {
+                margin: 5px;
+                border-bottom: 1px solid gray;
+            }
         </style>
         <div class="container flex-horizontal">
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
                     <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
                     <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
-                    <form is="iron-form" id="form">
-                        <template is="dom-repeat" items="{{_attributes}}">
-                            <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
-                                <div class="flexchild-vertical">
-                                    <iron-label class="category-headers">
-                                        {{item.name}}
-                                    </iron-label>
+                    <!-- <form is="iron-form" id="form"> -->
+                    <template is="dom-repeat" items="{{_attributes}}">
+                        <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
+                            <paper-collapse-item header="{{item.name}}">
+                                <div class="flexchild-vertical collapse-content">
                                     <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
                                     <iron-label for="{{item.id}}">{{input.label}}</iron-label>
                                 </div>
-                            </template>
-                            <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
-                                <div class="flexchild-vertical">
-                                    <iron-label class="category-headers">
-                                        {{item.name}}
-                                    <paper-tags-dropdown type="{{item.type}}" items="{{item.values}}" vertical-offset="60" horizontal-offset="-150">
-                                    </paper-tags-dropdown>
-                                    </iron-label>
-
-                                    <!-- <paper-dropdown-input on-value-changed="addFilter" name="{{item.name}}" label="{{item.name}}" items="{{item.values}}" placeholder="Any"></opaper-dropdown-input> -->
+                            </paper-collapse-item>
+                            <!-- <iron-label>{{item.name}} </iron-label>
+                            <iron-collapse opened>
+                                <div class="flexchild-vertical collapse-content">
+                                    <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
+                                    <iron-label for="{{item.id}}">{{input.label}}</iron-label>
                                 </div>
-                            </template>
-                            <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
-                                <div class="flexchild-vertical">
-                                    <!-- <paper-input on-change="addFilter" name="{{item.name}}" type="number" label="{{item.name}}"></paper-input> -->
-<!--                                     <paper-tags-input type="{{item.type}}" label="{{item.name}}">
-                                    </paper-tags-input> -->
-                                    <iron-label class="category-headers">
-                                        {{item.name}}
-                                    </iron-label>
-                                    <paper-range-slider></paper-range-slider>
-
-                                </div>
-                            </template>
+                            </iron-collapse> -->
                         </template>
-                    </form>
+                        <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
+                            <paper-collapse-item header="{{item.name}}">
+                                <div class="flexchild-vertical collapse-content">
+                                    <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
+                                        vertical-offset="60" horizontal-offset="-150">
+                                    </paper-tags-dropdown>
+                                </div>
+                            </paper-collapse-item>
+                            <!-- <iron-label>{{item.name}} </iron-label>
+                            <iron-collapse opened>
+                                <div class="flexchild-vertical collapse-content">
+                                    <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
+                                        vertical-offset="60" horizontal-offset="-150">
+                                    </paper-tags-dropdown>
+                                </div>
+                            </iron-collapse> -->
+                        </template>
+                        <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
+                            <paper-collapse-item header="{{item.name}}">
+                                <div class="flexchild-vertical collapse-content">
+                                    <iron-label class="category-headers">
+                                        {{item.name}}
+                                        <paper-range-slider pin name="{{item.name}}" label="{{item.name}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
+                                            min=[[_getItemMin(item)]] max=[[_getItemMax(item)]]></paper-range-slider>
+                                    </iron-label>
+                                </div>
+                            </paper-collapse-item>
+                            <!-- <iron-collapse opened>
+                                <div class="flexchild-vertical collapse-content">
+                                    <iron-label class="category-headers">
+                                        {{item.name}}
+                                        <paper-range-slider pin name="{{item.name}}" label="{{item.name}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
+                                            min=[[_getItemMin(item)]] max=[[_getItemMax(item)]]></paper-range-slider>
+                                    </iron-label>
+                                </div>
+                            </iron-collapse> -->
+                        </template>
+                    </template>
+                    <!-- </form> -->
                 </div>
             </div>
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
 
             <div class="flex2child">
+                <div id="selectionContainer">
+                    <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Sample Selection Type">
+                        <paper-listbox class="dropdown-content" selected="1">
+                            <paper-item>Auto</paper-item>
+                            <paper-item>Manual</paper-item>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+                    <div class="sItem sSelect">
+                        <paper-dropdown-menu id="smode" class="sItem" label="select ">
+                            <paper-listbox class="dropdown-content">
+                                <paper-item>Random</paper-item>
+                                <paper-item>Top</paper-item>
+                            </paper-listbox>
+                        </paper-dropdown-menu>
+                        <iron-label class="category-headers sItem">
+                            Selection %
+                            <paper-range-slider id="sperc" class="sItem" single-slider always-show-pin name="selection %" label="selection %" min=0 max=100
+                                value=0></paper-range-slider>
+                        </iron-label>
+                        <paper-button class="sItem" on-click="applySelection" raised>Apply Selection</paper-button>
+                    </div>
+                </div>
                 <table class="gridtable">
                     <thead>
                         <tr>
-                            <td>
+                            <th>
                                 <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
-                            </td>
+                            </th>
                             <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                <td class="table-headers" id="table-header-{{column}}" on-click="sortColumn">[[column]]</td>
+                                <th class="table-headers" on-click="sortColumn">
+                                    <span>[[column]]
+                                        <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
+                                    </span>
+                                </th>
                             </template>
                         </tr>
                     </thead>
@@ -209,14 +306,10 @@
                 }
             },
 
-            listeners: {
-                "tag-added": "addFilter",
-                "tag-removed": "removeFilter",
-            },
-
-            sortColumn: function(e) {
+            sortColumn: function (e) {
                 var self = this;
-                var category = e.target.id.split('-')[2];
+                // var category = e.target.id.split('-')[2];
+                var category = e.model.column;
 
                 this.set("tableData", _.sortBy(this.tableData, [category]));
                 this.$.dataTable.render();
@@ -230,6 +323,14 @@
                 return false;
             },
 
+            _getItemMin: function (item) {
+                return item.values[1];
+            },
+
+            _getItemMax: function (item) {
+                return item.values[0];
+            },
+
             _getItem: function (row, column) {
                 return row[column];
             },
@@ -241,65 +342,74 @@
                 return false;
             },
 
+            _sContainerChanged: function (e) {
+                console.log(e.target.value);
+
+                if (e.target.value == "Auto") {
+                    this.customStyle['--selection-visibility'] = 'visible';
+                }
+                else {
+                    this.customStyle['--selection-visibility'] = 'hidden';
+                }
+
+                this.updateStyles();
+            },
+
             toggleSelection: function (e) {
                 var item = this.$.dataTable.itemForElement(e.target);
                 this.$.selector.select(item);
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             },
 
-            addFilter: function(e) {
+            addFilter: function (e) {
                 var category = e.target.label;
 
-                if (e.type === "tag-added") {
-                    if (e.target.type === "number") {
-                        if (parseInt(e.detail)) {
-                            this.filters[category].push(parseInt(e.detail));
-                            this.filters["numFilters"]++;
-                        }
-                    } else {
-                        this.filters[category].push(e.detail);
-                        this.filters["numFilters"]++;
+                if (e.target.type === "number") {
+                    if (parseInt(e.detail)) {
+                        this.filters[category].push(parseInt(e.detail));
                     }
+                } else if (e.target.type === "category") {
+                    if (e.target.valueArray.length > 0) {
+                        this.filters[category] = e.target.valueArray;
+                    }
+                }
+                else {
+                    this.filters[category].push(e.detail);
                 }
             },
 
-            removeFilter: function(e) {
-                var category = e.target.label;
-
-                if (e.type === "tag-removed") {
-                    this.filters[category].splice(this.filters[category].indexOf(e.detail), 1);
-                    this.filters["numFilters"]--;
-                }
+            addSliderFilter: function (name, min, max) {
+                var category = name;
+                this.filters[category] = [min, max];
             },
 
             applyFilters: function () {
                 var self = this;
                 var filterString = [];
 
-                for(var key in this.filters) {
-                    if (key !== "numFilters") {
-                        var categoryFilters = []
-                        this.filters[key].forEach(function(val, index) {
-                            if (val !== "Any") {
-                                if (typeof (val) === "string") {
-                                    categoryFilters.push("item." + key + " == '" + val + "'");
-                                } else {
-                                    categoryFilters.push("item." + key + " == " + val);
+                for (var key in this.filters) {
+                    var categoryFilters = []
+                    this.filters[key].forEach(function (val, index) {
+                        if (val !== "Any") {
+                            if (typeof (val) === "string") {
+                                categoryFilters.push("item." + key + " == '" + val + "'");
+                            } else if (typeof (val) === "number") {
+                                if (index == 0) {
+                                    categoryFilters.push("item." + key + " >= " + val);
+                                } else if (index == 1) {
+                                    categoryFilters[categoryFilters.length - 1] += " && item." + key + " <= " + val;
                                 }
+                            } else {
+                                categoryFilters.push("item." + key + " == " + val);
                             }
-                        })
-                        if (categoryFilters.length !== 0) {
-                            filterString.push(categoryFilters);    
                         }
+                    });
+                    if (categoryFilters.length !== 0) {
+                        filterString.push(categoryFilters);
                     }
                 }
 
-                if (this.filters["numFilters"] === 0) {
-                    this.set("tableData", this.data);
-                    return;
-                }
-
-                filterString.forEach(function(val, index) {
+                filterString.forEach(function (val, index) {
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
 
@@ -307,14 +417,55 @@
                 this.set("tableData", this.data.filter(item => eval(fString)));
             },
 
-            resetFilters: function(e) {
+            applySelection: function (e) {
+                var self = this;
+                var selectionType = this.$.smode.value;
+                var selectionperc = this.$.sperc.valueMax;
+
+                self.$.selector.clearSelection();
+                var data = _.range(self.tableData.length);
+                var count = Math.round((data.length * selectionperc) / 100);
+
+                var elems = self.querySelectorAll(".row-check");
+                elems.forEach(function (elem) { elem.checked = false; });
+
+                switch (selectionType) {
+                    case 'Random':
+                        var randomSamples = _.sampleSize(data, count);
+                        _.each(randomSamples, function (rs) {
+                            if (!self.$.selector.isSelected(self.tableData[rs])) { self.$.selector.select(self.tableData[rs]); }
+                            elems[rs].checked = true;
+                        });
+                        break;
+                    case 'Top':
+                        _.each(_.slice(data, 0, count), function (rs) {
+                            if (!self.$.selector.isSelected(self.tableData[rs])) { self.$.selector.select(self.tableData[rs]); }
+                            elems[rs].checked = true;
+                        });
+                        break;
+                }
+            },
+
+            resetFilters: function (e) {
+                var self = this;
+
                 for (var key in this.filters) {
                     this.filters[key] = [];
                 }
-                this.querySelectorAll("paper-tags-input").forEach(function(elem) {
+
+                this.querySelectorAll("paper-tags-input").forEach(function (elem) {
                     elem.removeAll();
                 });
-                this.filters["numFilters"] = 0;
+
+                this.querySelectorAll(".slider").forEach(function (elem) {
+                    self._attributes.forEach(function (ta) {
+                        if (ta.name == elem.name) {
+                            elem.valueMax = self._getItemMax(ta);
+                            elem.valueMin = self._getItemMin(ta);
+                        }
+                    });
+                });
+
                 this.set("tableData", this.data);
             },
 
@@ -334,8 +485,6 @@
                     var elems = this.querySelectorAll(".row-check");
                     elems.forEach(function (elem) { elem.checked = false; });
                 }
-
-                // this.$.dataTable.render();
             },
 
             _dataChanged: function (newData, oldData) {
@@ -349,6 +498,17 @@
 
                 var attributes = self._buildAttributes(self.tableData, self.showColumns);
                 self._attributes = attributes;
+
+                // TODO: Replace with polymer's this.async
+                setTimeout(function () {
+                    var prs = self.querySelectorAll(".slider");
+                    for (var i = 0; i < prs.length; i++) {
+                        var elem = prs[i];
+                        elem.addEventListener('updateValues', function (customEvent) {
+                            self.addSliderFilter(this.name, this.valueMin, this.valueMax);
+                        });
+                    }
+                }, 1000);
             },
 
             _buildAttributes: function (data, columns) {
@@ -356,8 +516,6 @@
                 var self = this;
                 var attributes = [];
                 var parsedData = {};
-
-                self.filters["numFilters"] = 0;
 
                 data.forEach(function (d) { d.checked = false; });
 
@@ -393,15 +551,16 @@
                         }
                     }
                 });
+
                 return attributes;
             },
-            
-            _sortAlphaNum : function(a,b) {
+
+            _sortAlphaNum: function (a, b) {
                 var reA = /[^a-zA-Z]/g;
                 var reN = /[^0-9]/g;
                 var aA = String(a).replace(reA, "");
                 var bA = String(b).replace(reA, "");
-                if(aA === bA) {
+                if (aA === bA) {
                     var aN = parseInt(String(a).replace(reN, ""), 10);
                     var bN = parseInt(String(b).replace(reN, ""), 10);
                     return aN === bN ? 0 : aN > bN ? 1 : -1;
@@ -409,7 +568,6 @@
                     return aA > bA ? 1 : -1;
                 }
             }
-
 
             // created: function() {},
             // ready: function() {},
