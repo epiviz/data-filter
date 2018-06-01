@@ -134,7 +134,6 @@
                 grid-template-columns: repeat(4, minmax(100px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
-                overflow: scroll;
             }
 
             #filterContainer {
@@ -157,6 +156,12 @@
 
             #percentSelection {
                 margin: 8px 0;
+            }
+
+            #tableContainer {
+                width: 100%;
+                grid-column: span 4;
+                overflow: scroll;
             }
 
         </style>
@@ -217,34 +222,36 @@
                         value=0></paper-range-slider>
                 </iron-label>
                 <paper-button id="selectionApply" class="sItem autoItem" on-click="applySelection" raised>Apply Selection</paper-button>
-                <table class="gridtable">
-                    <thead>
-                        <tr>
-                            <th>
-                                <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
-                            </th>
-                            <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                <th class="table-headers" on-click="sortColumn">
-                                    <span>[[column]]
-                                        <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
-                                    </span>
+                <div id="tableContainer">
+                    <table class="gridtable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
                                 </th>
-                            </template>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
-                            <tr on-click="toggleSelection">
-                                <td>
-                                    <input class="row-check" type="checkbox">
-                                </td>
                                 <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                    <td>[[ _getItem(row, column) ]]</td>
+                                    <th class="table-headers" on-click="sortColumn">
+                                        <span>[[column]]
+                                            <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
+                                        </span>
+                                    </th>
                                 </template>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
+                                <tr on-click="toggleSelection">
+                                    <td>
+                                        <input class="row-check" type="checkbox">
+                                    </td>
+                                    <template is="dom-repeat" items="[[showColumns]]" as="column">
+                                        <td>[[ _getItem(row, column) ]]</td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </template>
