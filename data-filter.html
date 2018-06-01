@@ -1,4 +1,4 @@
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer/polymer-element.html">
 
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../iron-label/iron-label.html">
@@ -23,7 +23,6 @@
 
 <dom-module id="data-filter">
     <template>
-
         <style>
             :host {
                 display: inline-block;
@@ -141,7 +140,7 @@
                 border-bottom: 1px solid gray;
             }
         </style>
-        <div class="container flex-horizontal">
+        <div class="container">
             <div class="flexchild">
                 <div class="flex-vertical" id="filterContainer">
                     <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
@@ -167,7 +166,7 @@
                             <paper-collapse-item header="{{item.name}}">
                                 <div class="flexchild-vertical collapse-content">
                                     <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
-                                        vertical-offset="60" horizontal-offset="-150">
+                                        vertical-offset="0" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                 </div>
                             </paper-collapse-item>
@@ -263,86 +262,89 @@
     </template>
 
     <script>
-        Polymer({
-            is: 'data-filter',
-            properties: {
-                filters: {
-                    type: Object,
-                    notify: true,
-                    value: {},
-                },
+        class DataFilter extends Polymer.Element {
+            static get is() { return 'data-filter'; }
 
-                data: {
-                    type: Array,
-                    notify: true,
-                    observer: "_dataChanged"
-                },
+            static get properties() {
+                return {
+                    filters: {
+                        type: Object,
+                        notify: true,
+                        value: {},
+                    },
 
-                tableData: {
-                    type: Array,
-                    notify: true
-                },
+                    data: {
+                        type: Array,
+                        notify: true,
+                        observer: "_dataChanged"
+                    },
 
-                showColumns: {
-                    type: Array,
-                    notify: true,
-                    value: []
-                },
+                    tableData: {
+                        type: Array,
+                        notify: true
+                    },
 
-                showFilterBar: {
-                    type: Boolean,
-                    value: true
-                },
+                    showColumns: {
+                        type: Array,
+                        notify: true,
+                        value: []
+                    },
 
-                _attributes: {
-                    type: Array,
-                    value: [],
-                    notify: true
-                },
+                    showFilterBar: {
+                        type: Boolean,
+                        value: true
+                    },
 
-                selectedItems: {
-                    type: Array,
-                    notify: true
+                    _attributes: {
+                        type: Array,
+                        value: [],
+                        notify: true
+                    },
+
+                    selectedItems: {
+                        type: Array,
+                        notify: true
+                    }
                 }
-            },
+            }
 
-            sortColumn: function (e) {
+            sortColumn (e) {
                 var self = this;
                 // var category = e.target.id.split('-')[2];
                 var category = e.model.column;
 
                 this.set("tableData", _.sortBy(this.tableData, [category]));
                 this.$.dataTable.render();
-            },
+            }
 
-            _settingType: function (type, expected) {
+            _settingType (type, expected) {
                 if (type == expected) {
                     return true;
                 }
 
                 return false;
-            },
+            }
 
-            _getItemMin: function (item) {
+            _getItemMin (item) {
                 return item.values[1];
-            },
+            }
 
-            _getItemMax: function (item) {
+            _getItemMax (item) {
                 return item.values[0];
-            },
+            }
 
-            _getItem: function (row, column) {
+            _getItem (row, column) {
                 return row[column];
-            },
+            }
 
-            _isIndeterminate: function () {
+            _isIndeterminate () {
                 if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length != this.tableData.length) {
                     return true;
                 }
                 return false;
-            },
+            }
 
-            _sContainerChanged: function (e) {
+            _sContainerChanged (e) {
                 console.log(e.target.value);
 
                 if (e.target.value == "Auto") {
@@ -353,15 +355,15 @@
                 }
 
                 this.updateStyles();
-            },
+            }
 
-            toggleSelection: function (e) {
+            toggleSelection (e) {
                 var item = this.$.dataTable.itemForElement(e.target);
                 this.$.selector.select(item);
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
-            },
+            }
 
-            addFilter: function (e) {
+            addFilter (e) {
                 var category = e.target.label;
 
                 if (e.target.type === "number") {
@@ -376,14 +378,14 @@
                 else {
                     this.filters[category].push(e.detail);
                 }
-            },
+            }
 
-            addSliderFilter: function (name, min, max) {
+            addSliderFilter (name, min, max) {
                 var category = name;
                 this.filters[category] = [min, max];
-            },
+            }
 
-            applyFilters: function () {
+            applyFilters () {
                 var self = this;
                 var filterString = [];
 
@@ -415,9 +417,9 @@
 
                 var fString = filterString.join(" && ");
                 this.set("tableData", this.data.filter(item => eval(fString)));
-            },
+            }
 
-            applySelection: function (e) {
+            applySelection (e) {
                 var self = this;
                 var selectionType = this.$.smode.value;
                 var selectionperc = this.$.sperc.valueMax;
@@ -444,9 +446,9 @@
                         });
                         break;
                 }
-            },
+            }
 
-            resetFilters: function (e) {
+            resetFilters (e) {
                 var self = this;
 
                 for (var key in this.filters) {
@@ -467,9 +469,9 @@
                 });
 
                 this.set("tableData", this.data);
-            },
+            }
 
-            _selectAll: function (e) {
+            _selectAll (e) {
                 var self = this;
 
                 if (e.target.checked) {
@@ -485,9 +487,9 @@
                     var elems = this.querySelectorAll(".row-check");
                     elems.forEach(function (elem) { elem.checked = false; });
                 }
-            },
+            }
 
-            _dataChanged: function (newData, oldData) {
+            _dataChanged (newData, oldData) {
                 var self = this;
 
                 self.tableData = self.data;
@@ -509,9 +511,9 @@
                         });
                     }
                 }, 1000);
-            },
+            }
 
-            _buildAttributes: function (data, columns) {
+            _buildAttributes (data, columns) {
 
                 var self = this;
                 var attributes = [];
@@ -553,9 +555,9 @@
                 });
 
                 return attributes;
-            },
+            }
 
-            _sortAlphaNum: function (a, b) {
+            _sortAlphaNum (a, b) {
                 var reA = /[^a-zA-Z]/g;
                 var reN = /[^0-9]/g;
                 var aA = String(a).replace(reA, "");
@@ -568,11 +570,7 @@
                     return aA > bA ? 1 : -1;
                 }
             }
-
-            // created: function() {},
-            // ready: function() {},
-            // attached: function() {}
-
-        });
+        }
+        customElements.define(DataFilter.is, DataFilter);
     </script>
 </dom-module>
