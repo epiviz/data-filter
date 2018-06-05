@@ -1,4 +1,5 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/utils/async.html">
 
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../iron-label/iron-label.html">
@@ -16,6 +17,7 @@
 <link rel="import" href="../paper-collapse-item/paper-collapse-item.html">
 
 <script src="../lodash/lodash.js"></script>
+<script src="../async/dist/async.js"></script>
 
 <!-- <link rel="import" href="../iron-list/iron-list.html"> -->
 <!-- <link rel="import" href="../iron-dropdown/iron-dropdown.html"> -->
@@ -52,6 +54,7 @@
                 padding: 7px 14px;
                 border-collapse: collapse;
                 text-align: center;
+                white-space: nowrap;
             }
 
             tr,
@@ -211,7 +214,7 @@
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <paper-dropdown-menu id="smode" class="sItem autoItem" label="select ">
-                    <paper-listbox slot="dropdown-content">
+                    <paper-listbox slot="dropdown-content" selected="0">
                         <paper-item>Random</paper-item>
                         <paper-item>Top</paper-item>
                     </paper-listbox>
@@ -227,7 +230,7 @@
                         <thead>
                             <tr>
                                 <th>
-                                    <input type="checkbox" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_selectAll">
+                                    <input type="checkbox" checked="[[_isAllSelected(selectedItems.*)]]" indeterminate="[[_isIndeterminate(selectedItems.*)]]" on-click="_toggleSelectAll">
                                 </th>
                                 <template is="dom-repeat" items="[[showColumns]]" as="column">
                                     <th class="table-headers" on-click="sortColumn">
@@ -339,6 +342,13 @@
                 return false;
             }
 
+            _isAllSelected() {
+                if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length === this.tableData.length) {
+                    return true;
+                }
+                return false;
+            }
+
             _sContainerChanged (e) {
                 if (e.target.value == "Auto") {
                     this.updateStyles({'--selection-visibility': 'visible'});
@@ -419,20 +429,29 @@
                 var data = _.range(self.tableData.length);
                 var count = Math.round((data.length * selectionperc) / 100);
 
-                var elems = self.querySelectorAll(".row-check");
+                var elems = self.shadowRoot.querySelectorAll(".row-check");
                 elems.forEach(function (elem) { elem.checked = false; });
+
+                if (selectionperc === 100) {
+                    self._selectAll();
+                    return;
+                }
 
                 switch (selectionType) {
                     case 'Random':
                         var randomSamples = _.sampleSize(data, count);
                         _.each(randomSamples, function (rs) {
-                            if (!self.$.selector.isSelected(self.tableData[rs])) { self.$.selector.select(self.tableData[rs]); }
+                            if (!self.$.selector.isSelected(self.tableData[rs])) { 
+                                self.$.selector.select(self.tableData[rs]); 
+                            }
                             elems[rs].checked = true;
                         });
                         break;
                     case 'Top':
                         _.each(_.slice(data, 0, count), function (rs) {
-                            if (!self.$.selector.isSelected(self.tableData[rs])) { self.$.selector.select(self.tableData[rs]); }
+                            if (!self.$.selector.isSelected(self.tableData[rs])) { 
+                                self.$.selector.select(self.tableData[rs]); 
+                            }
                             elems[rs].checked = true;
                         });
                         break;
@@ -446,11 +465,11 @@
                     this.filters[key] = [];
                 }
 
-                this.querySelectorAll("paper-tags-input").forEach(function (elem) {
+                this.shadowRoot.querySelectorAll("paper-tags-input").forEach(function (elem) {
                     elem.removeAll();
                 });
 
-                this.querySelectorAll(".slider").forEach(function (elem) {
+                this.shadowRoot.querySelectorAll(".slider").forEach(function (elem) {
                     self._attributes.forEach(function (ta) {
                         if (ta.name == elem.name) {
                             elem.valueMax = self._getItemMax(ta);
@@ -462,22 +481,30 @@
                 this.set("tableData", this.data);
             }
 
-            _selectAll (e) {
+            _toggleSelectAll (e) {
                 var self = this;
-
                 if (e.target.checked) {
-                    this.tableData.forEach(function (item) {
-                        if (!self.$.selector.isSelected(item)) { self.$.selector.select(item); }
-                    });
-
-                    var elems = this.querySelectorAll(".row-check");
-                    elems.forEach(function (elem) { elem.checked = true; });
+                    this._selectAll();
                 }
                 else {
-                    self.$.selector.clearSelection();
-                    var elems = this.querySelectorAll(".row-check");
-                    elems.forEach(function (elem) { elem.checked = false; });
+                    this._deselectAll();
                 }
+            }
+
+            _selectAll() {
+                var self = this;
+                this.tableData.forEach(function (item) {
+                    if (!self.$.selector.isSelected(item)) { self.$.selector.select(item); }
+                });
+
+                var elems = this.shadowRoot.querySelectorAll(".row-check");
+                elems.forEach(function (elem) { elem.checked = true; });
+            }
+
+            _deselectAll() {
+                this.$.selector.clearSelection();
+                var elems = this.shadowRoot.querySelectorAll(".row-check");
+                elems.forEach(function (elem) { elem.checked = false; });
             }
 
             _dataChanged (newData, oldData) {
@@ -494,7 +521,7 @@
 
                 // TODO: Replace with polymer's this.async
                 setTimeout(function () {
-                    var prs = self.querySelectorAll(".slider");
+                    var prs = self.shadowRoot.querySelectorAll(".slider");
                     for (var i = 0; i < prs.length; i++) {
                         var elem = prs[i];
                         elem.addEventListener('updateValues', function (customEvent) {
