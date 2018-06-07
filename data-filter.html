@@ -1,23 +1,24 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../polymer/lib/utils/async.html">
 
+<link rel="import" href="../iron-collapse/iron-collapse.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="../iron-label/iron-label.html">
-<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="../paper-input/paper-input.html">
-<link rel="import" href="../paper-button/paper-button.html">
-<link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
-<link rel="import" href="../paper-tags/paper-tags-dropdown.html">
-<link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../iron-form/iron-form.html">
+<link rel="import" href="../iron-label/iron-label.html">
+
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-collapse-item/paper-collapse-item.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-input-container.html">
 <link rel="import" href="../paper-range-slider/paper-range-slider.html">
 <link rel="import" href="../paper-styles/paper-styles.html">
-<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../iron-collapse/iron-collapse.html">
-<link rel="import" href="../paper-collapse-item/paper-collapse-item.html">
+<link rel="import" href="../paper-tags/paper-tags-dropdown.html">
+<link rel="import" href="../paper-tags/paper-tags-input.html">
+<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
 
 <script src="../lodash/lodash.js"></script>
-<script src="../async/dist/async.js"></script>
 
 <!-- <link rel="import" href="../iron-list/iron-list.html"> -->
 <!-- <link rel="import" href="../iron-dropdown/iron-dropdown.html"> -->
@@ -89,6 +90,14 @@
 
             paper-range-slider {
                 --paper-range-slider-width: 100%;
+            }
+
+            paper-input-container {
+                padding: 0px;
+            }
+
+            input.searchInput {
+                @apply --paper-input-container-shared-input-style;
             }
 
             .flexchild-vertical {
@@ -178,9 +187,15 @@
             <div id="filterContainer">
                 <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
                 <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
+                <div id="searchbox">
+                    <paper-input value="{{filterSearch}}" no-label-float>
+                        <paper-icon-button icon="search" role="button" slot="prefix"></paper-icon-button>
+                        <paper-icon-button icon="clear" slot="suffix" on-click="_resetFilterSearch"></paper-icon-button>
+                    </paper-input>
+                </div>
                 <template is="dom-repeat" items="{{_attributes}}">
                     <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
-                        <paper-collapse-item header="{{item.name}}">
+                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
                             <div class="flexchild-vertical collapse-content">
                                 <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
                                 <iron-label for="{{item.id}}">{{input.label}}</iron-label>
@@ -188,7 +203,7 @@
                         </paper-collapse-item>
                     </template>
                     <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
-                        <paper-collapse-item header="{{item.name}}">
+                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
                             <div class="flexchild-vertical collapse-content">
                                 <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
                                     vertical-offset="0" horizontal-offset="-150">
@@ -197,7 +212,7 @@
                         </paper-collapse-item>
                     </template>
                     <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
-                        <paper-collapse-item header="{{item.name}}">
+                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
                             <div class="flexchild-vertical collapse-content">
                                 <iron-label class="category-headers">
                                     {{item.name}}
@@ -277,6 +292,13 @@
                         value: {},
                     },
 
+                    filterSearch: {
+                        type: String,
+                        notify: true,
+                        value: '',
+                        observer: "_searchChanged"
+                    },
+
                     data: {
                         type: Array,
                         notify: true,
@@ -297,6 +319,12 @@
                     showFilterBar: {
                         type: Boolean,
                         value: true
+                    },
+
+                    _defaultAttributes: {
+                        type: Array,
+                        value: [],
+                        notify: true,
                     },
 
                     _attributes: {
@@ -471,8 +499,9 @@
                     this.filters[key] = [];
                 }
 
-                this.shadowRoot.querySelectorAll("paper-tags-input").forEach(function (elem) {
-                    elem.removeAll();
+                this.shadowRoot.querySelectorAll("paper-tags-dropdown").forEach(function (elem) {
+                    var input = elem.shadowRoot.querySelector("paper-tags-input");
+                    input.removeAll();
                 });
 
                 this.shadowRoot.querySelectorAll(".slider").forEach(function (elem) {
@@ -537,6 +566,21 @@
                 }, 1000);
             }
 
+            _searchChanged(newVal, oldVal) {
+                var self = this;
+                this._attributes.forEach(function(item, index) {
+                    if (newVal === '' || item.name.toLowerCase().indexOf(newVal.toLowerCase()) !== -1) {
+                        self.set("_attributes." + index + ".hidden", false);
+                    } else {
+                        self.set("_attributes." + index + ".hidden", true);
+                    }
+                });
+            }
+
+            _resetFilterSearch(e) {
+                this.set("filterSearch", '');
+            }
+
             _buildAttributes (data, columns) {
 
                 var self = this;
@@ -555,7 +599,8 @@
                             "name": key,
                             "type": "number",
                             "values": [parsedData[key].reduce(function (a, b) { return Math.max(a, b); }),
-                            parsedData[key].reduce(function (a, b) { return Math.min(a, b); })]
+                            parsedData[key].reduce(function (a, b) { return Math.min(a, b); })],
+                            "hidden": false,
                         });
                     }
                     else {
@@ -565,14 +610,16 @@
                             attributes.push({
                                 "name": key,
                                 "type": "boolean",
-                                "values": [true, false]
+                                "values": [true, false],
+                                "hidden": false,
                             });
                         }
                         else {
                             attributes.push({
                                 "name": key,
                                 "type": "category",
-                                "values": parsedData[key].filter(function (x, i, a) { return a.indexOf(x) == i; })
+                                "values": _.filter(_.uniq(parsedData[key]), (o) => {return !(o === undefined)}),
+                                "hidden": false,
                             });
                         }
                     }
