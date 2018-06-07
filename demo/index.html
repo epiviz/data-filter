@@ -47,10 +47,11 @@
             tmp.id = data.id[i];
             tmp.sequencingType = data.sequencingType[i];
             tmp.name = data.name[i];
-            var annotations = Object.keys(data.annotation[i]);
-            annotations.forEach(function (anno) {
-              tmp[anno] = data.annotation[i][anno];
-            });
+            tmp.annotation = data.annotation[i]
+            // var annotations = Object.keys(data.annotation[i]);
+            // annotations.forEach(function (anno) {
+            //   tmp[anno] = data.annotation[i][anno];
+            // });
 
             fdata.push(tmp);
           }
