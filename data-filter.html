@@ -6,14 +6,17 @@
 <link rel="import" href="../iron-label/iron-label.html">
 
 <link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../paper-collapse-item/paper-collapse-item.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-dropdown-input/paper-dropdown-input.html">
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-input/paper-input-container.html">
+<link rel="import" href="../paper-menu-button/paper-menu-button.html">
 <link rel="import" href="../paper-range-slider/paper-range-slider.html">
 <link rel="import" href="../paper-styles/paper-styles.html">
+<link rel="import" href="../paper-styles/default-theme.html">
 <link rel="import" href="../paper-tags/paper-tags-dropdown.html">
 <link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
@@ -84,8 +87,14 @@
             }
 
             paper-collapse-item {
-                margin: 5px;
-                border-bottom: 1px solid gray;
+                --paper-collapse-simple-paper-item-styles: {
+                    border-bottom: 1px solid var(--light-theme-divider-color);
+                };
+            }
+
+            paper-checkbox {
+                width: 100%;
+                padding: 8px;
             }
 
             paper-range-slider {
@@ -102,7 +111,7 @@
 
             .flexchild-vertical {
                 @apply --layout-flex;
-                border-bottom: 1px solid rgba(34, 36, 38, .15);
+                /*border-bottom: 1px solid rgba(34, 36, 38, .15);*/
                 padding: 10px;
             }
 
@@ -137,6 +146,15 @@
                 display: var(--selection-visibility);
             }
 
+            .sButton {
+                height: fit-content;
+                margin: 8px 0;
+            }
+
+            .columnSelection {
+                min-height: 0px;
+            }
+
             #apply-button {
                 margin-top: 10px;
             }
@@ -145,18 +163,22 @@
                 padding: 0 10px;
                 display: grid;
                 grid-template-rows: 75px auto;
-                grid-template-columns: repeat(4, minmax(100px, 1fr));
+                grid-template-columns: auto repeat(4, minmax(100px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
                 max-height: inherit;
-                overflow: scroll;
             }
 
             #filterContainer {
                 grid-column: 1;
                 max-height: inherit;
-                overflow-y: scroll;
-                overflow-x: hidden;
+            }
+
+            #filterOptions {
+                overflow: scroll;
+                max-height: inherit;
+                padding-bottom: 100px;
+                box-sizing: border-box;
             }
 
             #selector {
@@ -168,11 +190,6 @@
                 left: -15px;
             }
 
-            #selectionApply {
-                height: fit-content;
-                margin: 8px 0;
-            }
-
             #percentSelection {
                 margin: 8px 0;
             }
@@ -180,6 +197,9 @@
             #tableContainer {
                 width: 100%;
                 grid-column: span 4;
+                overflow: scroll;
+                padding-bottom: 75px;
+                box-sizing: border-box;
             }
         </style>
         <div class="container">
@@ -192,41 +212,55 @@
                         <paper-icon-button icon="clear" slot="suffix" on-click="_resetFilterSearch"></paper-icon-button>
                     </paper-input>
                 </div>
-                <template is="dom-repeat" items="{{_attributes}}">
-                    <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
-                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
-                            <div class="flexchild-vertical collapse-content">
-                                <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
-                                <iron-label for="{{item.id}}">{{input.label}}</iron-label>
-                            </div>
-                        </paper-collapse-item>
+                <div id="filterOptions">
+                    <template is="dom-repeat" items="{{_attributes}}">
+                        <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
+                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                                <div class="flexchild-vertical collapse-content">
+                                    <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
+                                    <iron-label for="{{item.id}}">{{input.label}}</iron-label>
+                                </div>
+                            </paper-collapse-item>
+                        </template>
+                        <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
+                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                                <div class="flexchild-vertical collapse-content">
+                                    <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
+                                        vertical-offset="0" horizontal-offset="-150">
+                                    </paper-tags-dropdown>
+                                </div>
+                            </paper-collapse-item>
+                        </template>
+                        <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
+                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                                <div class="flexchild-vertical collapse-content">
+                                    <iron-label class="category-headers">
+                                        <div title="text">{{item.name}}</div>
+                                        <paper-range-slider pin name="{{item.name}}" label="{{item.name}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
+                                            min=[[_getItemMin(item)]] max=[[_getItemMax(item)]]></paper-range-slider>
+                                    </iron-label>
+                                </div>
+                            </paper-collapse-item>
+                        </template>
                     </template>
-                    <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
-                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
-                            <div class="flexchild-vertical collapse-content">
-                                <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
-                                    vertical-offset="0" horizontal-offset="-150">
-                                </paper-tags-dropdown>
-                            </div>
-                        </paper-collapse-item>
-                    </template>
-                    <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
-                        <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
-                            <div class="flexchild-vertical collapse-content">
-                                <iron-label class="category-headers">
-                                    {{item.name}}
-                                    <paper-range-slider pin name="{{item.name}}" label="{{item.name}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
-                                        min=[[_getItemMin(item)]] max=[[_getItemMax(item)]]></paper-range-slider>
-                                </iron-label>
-                            </div>
-                        </paper-collapse-item>
-                    </template>
-                </template>
+                </div>
             </div>
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
 
             <div id="selectionContainer">
+                <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
+                    <paper-button slot="dropdown-trigger">
+                        <iron-icon icon="icons:expand-more"></iron-icon>
+                    </paper-button>
+                    <paper-listbox slot="dropdown-content">
+                        <template is="dom-repeat" items="[[defaultColumns]]" as="column">
+                            <paper-item class="columnSelection" role="menuitemcheckbox">
+                                <paper-checkbox name="{{column}}" checked on-click="toggleColumn">{{column}}</paper-checkbox>
+                            </paper-item>
+                        </template>
+                    </paper-listbox>
+                </paper-menu-button>
                 <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Sample Selection Type">
                     <paper-listbox slot="dropdown-content" selected="1">
                         <paper-item>Auto</paper-item>
@@ -244,7 +278,7 @@
                     <paper-range-slider main-div-style={ "display": "inline"} id="sperc" class="sItem autoItem" single-slider always-show-pin
                         name="selection %" label="selection %" min=0 max=100 value=0></paper-range-slider>
                 </iron-label>
-                <paper-button id="selectionApply" class="sItem autoItem" on-click="applySelection" raised>Apply Selection</paper-button>
+                <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <div id="tableContainer">
                     <table class="gridtable">
                         <thead>
@@ -316,9 +350,9 @@
                         value: []
                     },
 
-                    showFilterBar: {
-                        type: Boolean,
-                        value: true
+                    defaultColumns: {
+                        type: Array,
+                        value: []
                     },
 
                     _defaultAttributes: {
@@ -398,6 +432,22 @@
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             }
 
+            toggleColumn(e) {
+                var self = this;
+                if (!e.target.checked) {
+                    this.splice('showColumns', this.showColumns.indexOf(e.target.name), 1);
+                } else {
+                    var showColumnIndex = 0;
+                    this.defaultColumns.forEach((item, index) => {
+                        if (item === e.target.name) {
+                            this.splice('showColumns', showColumnIndex, 0, item);
+                        } else if (this.showColumns[showColumnIndex] === this.defaultColumns[index]) {
+                            showColumnIndex ++;
+                        }
+                    });
+                }
+            }
+
             addFilter(e) {
                 var category = e.target.label;
 
@@ -449,6 +499,8 @@
                 filterString.forEach(function (val, index) {
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
+
+                console.log(filterString);
 
                 var fString = filterString.join(" && ");
                 this.set("tableData", this.data.filter(item => eval(fString)));
@@ -555,6 +607,7 @@
 
                 if (self.showColumns.length == 0) {
                     self.set("showColumns", Object.keys(self.tableData[0]));
+                    self.set("defaultColumns", Object.keys(self.tableData[0]));
                 }
 
                 var attributes = self._buildAttributes(self.tableData, self.showColumns);
@@ -670,6 +723,8 @@
                     return aA > bA ? 1 : -1;
                 }
             }
+
+
         }
         customElements.define(DataFilter.is, DataFilter);
     </script>

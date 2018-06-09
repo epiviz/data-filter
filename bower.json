@@ -29,6 +29,7 @@
     "paper-button": "^2.1.1",
     "iron-collapse": "^2.2.1",
     "paper-collapse-item": "2.3.1",
-    "paper-tags": "AlexanderYZhang/paper-tags#master"
+    "paper-tags": "AlexanderYZhang/paper-tags#master",
+    "paper-checkbox": "^2.0.4"
   }
 }
