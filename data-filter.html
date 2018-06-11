@@ -139,7 +139,8 @@
                 display: grid;
                 grid-template-columns: minmax(200px, 1fr) 4fr;
                 max-height: inherit;
-                overflow: hidden;
+                overflow-x: scroll;
+                overflow-y: hidden;
             }
 
             .autoItem {
@@ -196,7 +197,7 @@
 
             #tableContainer {
                 width: 100%;
-                grid-column: span 4;
+                grid-column: span 5;
                 overflow: scroll;
                 padding-bottom: 75px;
                 box-sizing: border-box;
@@ -335,11 +336,15 @@
 
                     data: {
                         type: Array,
-                        notify: true,
                         observer: "_dataChanged"
                     },
 
                     tableData: {
+                        type: Array,
+                        notify: true
+                    },
+
+                    flattenedData: {
                         type: Array,
                         notify: true
                     },
@@ -479,15 +484,15 @@
                     this.filters[key].forEach(function (val, index) {
                         if (val !== "Any") {
                             if (typeof (val) === "string") {
-                                categoryFilters.push("item." + key + " == '" + val + "'");
+                                categoryFilters.push("item['" + key + "'] == '" + val + "'");
                             } else if (typeof (val) === "number") {
                                 if (index == 0) {
-                                    categoryFilters.push("item." + key + " >= " + val);
+                                    categoryFilters.push("item['" + key + "'] >= " + val);
                                 } else if (index == 1) {
-                                    categoryFilters[categoryFilters.length - 1] += " && item." + key + " <= " + val;
+                                    categoryFilters[categoryFilters.length - 1] += " && item['" + key + "'] <= " + val;
                                 }
                             } else {
-                                categoryFilters.push("item." + key + " == " + val);
+                                categoryFilters.push("item['" + key + "'] == " + val);
                             }
                         }
                     });
@@ -500,10 +505,9 @@
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
 
-                console.log(filterString);
-
                 var fString = filterString.join(" && ");
-                this.set("tableData", this.data.filter(item => eval(fString)));
+                var newData = this.flattenedData.filter(item => eval(fString));
+                this.set("tableData", newData);
             }
 
             applySelection(e) {
@@ -565,7 +569,7 @@
                     });
                 });
 
-                this.set("tableData", this.data);
+                this.set("tableData", this.flattenedData);
             }
 
             _toggleSelectAll(e) {
@@ -603,7 +607,8 @@
 
                 data = data.map(self._flattenObject);
 
-                self.tableData = data;
+                this.set('flattenedData', data);
+                self.tableData = self.flattenedData;
 
                 if (self.showColumns.length == 0) {
                     self.set("showColumns", Object.keys(self.tableData[0]));
