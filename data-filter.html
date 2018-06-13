@@ -174,13 +174,13 @@
             #filterContainer {
                 grid-column: 1;
                 max-height: inherit;
+                height: 100%;
             }
 
             #filterOptions {
                 overflow: scroll;
                 max-height: inherit;
-                padding-bottom: 100px;
-                box-sizing: border-box;
+                height: calc(100% - 100px);
             }
 
             #selector {
@@ -200,9 +200,8 @@
                 width: 100%;
                 grid-column: span 5;
                 overflow: scroll;
-                padding-bottom: 75px;
-                box-sizing: border-box;
                 max-height: inherit;
+                height: calc(100% - 75px);
             }
         </style>
         <div class="container">
@@ -254,6 +253,7 @@
             <div id="selectionContainer">
                 <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
                     <paper-button slot="dropdown-trigger">
+                        Columns
                         <iron-icon icon="icons:expand-more"></iron-icon>
                     </paper-button>
                     <paper-listbox slot="dropdown-content">
