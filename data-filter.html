@@ -140,7 +140,7 @@
                 display: grid;
                 grid-template-columns: minmax(200px, 1fr) 4fr;
                 max-height: inherit;
-                overflow-x: scroll;
+                overflow-x: auto;
                 overflow-y: hidden;
             }
 
@@ -157,14 +157,10 @@
                 min-height: 0px;
             }
 
-            #apply-button {
-                margin-top: 10px;
-            }
-
             #selectionContainer {
                 padding: 0 10px;
                 display: grid;
-                grid-template-rows: 75px auto;
+                grid-template-rows: 75px 100%;
                 grid-template-columns: auto repeat(4, minmax(100px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
@@ -178,7 +174,7 @@
             }
 
             #filterOptions {
-                overflow: scroll;
+                overflow: auto;
                 max-height: inherit;
                 height: calc(100% - 100px);
             }
@@ -199,7 +195,7 @@
             #tableContainer {
                 width: 100%;
                 grid-column: span 5;
-                overflow: scroll;
+                overflow: auto;
                 max-height: inherit;
                 height: calc(100% - 75px);
             }
