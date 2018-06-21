@@ -90,7 +90,8 @@
             paper-collapse-item {
                 --paper-collapse-simple-paper-item-styles: {
                     border-bottom: 1px solid var(--light-theme-divider-color);
-                };
+                }
+                ;
             }
 
             paper-checkbox {
@@ -200,9 +201,21 @@
                 max-height: inherit;
                 height: calc(100% - 75px);
             }
+
+            .lfilter {
+                /* background-color: gainsboro;
+                color: white; */
+                border: 1px solid black;
+                border-radius: 2px;
+            }
         </style>
         <div class="container">
             <div id="filterContainer">
+                <div id="filtersList">
+                    <template is="dom-repeat" items="{{filterStringArray}}">
+                        <iron-label class="lfilter">{{_sanitize(item)}}</iron-label>
+                    </template>
+                </div>
                 <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
                 <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
                 <div id="searchbox">
@@ -326,6 +339,11 @@
                         value: {},
                     },
 
+                    filterStringArray: {
+                        type: Array,
+                        notify: true
+                    },
+
                     filterSearch: {
                         type: String,
                         notify: true,
@@ -387,6 +405,15 @@
                 this.$.dataTable.render();
             }
 
+            _sanitize(item) {
+                var item = item.replace(/\)|\(|\[|\]|item/g, "")
+                    .replace(/\|\|/g, " OR ")
+                    .replace(/\&\&/g, " AND ")
+                    .replace(/==/g, " = ");
+
+                return item;
+            }
+
             _settingType(type, expected) {
                 if (type == expected) {
                     return true;
@@ -446,7 +473,7 @@
                         if (item === e.target.name) {
                             this.splice('showColumns', showColumnIndex, 0, item);
                         } else if (this.showColumns[showColumnIndex] === this.defaultColumns[index]) {
-                            showColumnIndex ++;
+                            showColumnIndex++;
                         }
                     });
                 }
@@ -503,6 +530,8 @@
                 filterString.forEach(function (val, index) {
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
+
+                self.set("filterStringArray", filterString);
 
                 var fString = filterString.join(" && ");
                 var newData = this.flattenedData.filter(item => eval(fString));
@@ -629,9 +658,9 @@
                 }, 1000);
             }
 
-            _searchChanged (newVal, oldVal) {
+            _searchChanged(newVal, oldVal) {
                 var self = this;
-                this._attributes.forEach(function(item, index) {
+                this._attributes.forEach(function (item, index) {
                     if (newVal === '' || item.name.toLowerCase().indexOf(newVal.toLowerCase()) !== -1) {
                         self.set("_attributes." + index + ".hidden", false);
                     } else {
@@ -644,7 +673,7 @@
                 this.set("filterSearch", '');
             }
 
-            _buildAttributes (data, columns) {
+            _buildAttributes(data, columns) {
                 var self = this;
                 var attributes = [];
                 var parsedData = {};
@@ -680,7 +709,7 @@
                             attributes.push({
                                 "name": key,
                                 "type": "category",
-                                "values": _.filter(_.uniq(parsedData[key]), (o) => {return !(o === undefined)}),
+                                "values": _.filter(_.uniq(parsedData[key]), (o) => { return !(o === undefined) }),
                                 "hidden": false,
                             });
                         }
