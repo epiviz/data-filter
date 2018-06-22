@@ -18,6 +18,7 @@
 <link rel="import" href="../paper-styles/paper-styles.html">
 <link rel="import" href="../paper-tags/paper-tags-dropdown.html">
 <link rel="import" href="../paper-tags/paper-tags-input.html">
+<link rel="import" href="../paper-tags/paper-tags.html">
 <link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
 
 <script src="../lodash/lodash.js"></script>
@@ -158,10 +159,14 @@
                 min-height: 0px;
             }
 
+            .filterItems {
+                display: inline;
+            }
+
             #selectionContainer {
                 padding: 0 10px;
                 display: grid;
-                grid-template-rows: 75px 100%;
+                grid-template-rows: auto 75px 100%;
                 grid-template-columns: auto repeat(4, minmax(100px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
@@ -202,20 +207,13 @@
                 height: calc(100% - 75px);
             }
 
-            .lfilter {
-                /* background-color: gainsboro;
-                color: white; */
-                border: 1px solid black;
-                border-radius: 2px;
+            #filtersList {
+                grid-column: span 5;
             }
+
         </style>
         <div class="container">
             <div id="filterContainer">
-                <div id="filtersList">
-                    <template is="dom-repeat" items="{{filterStringArray}}">
-                        <iron-label class="lfilter">{{_sanitize(item)}}</iron-label>
-                    </template>
-                </div>
                 <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
                 <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
                 <div id="searchbox">
@@ -261,6 +259,12 @@
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
 
             <div id="selectionContainer">
+                <div id="filtersList">
+                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray)}}" as="category" mutable-data>
+                        <iron-label>{{category}}:</iron-label>
+                        <paper-tags class="filterItems" items="{{_filterValues(category, filterStringArray)}}" readonly></paper-tags>
+                    </template>
+                </div>
                 <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
                     <paper-button slot="dropdown-trigger">
                         Columns
@@ -328,7 +332,7 @@
     </template>
 
     <script>
-        class DataFilter extends Polymer.Element {
+        class DataFilter extends Polymer.MutableData(Polymer.Element) {
             static get is() { return 'data-filter'; }
 
             static get properties() {
@@ -405,13 +409,27 @@
                 this.$.dataTable.render();
             }
 
-            _sanitize(item) {
-                var item = item.replace(/\)|\(|\[|\]|item/g, "")
-                    .replace(/\|\|/g, " OR ")
-                    .replace(/\&\&/g, " AND ")
-                    .replace(/==/g, " = ");
+            _filterCategories(filters) {
+                var categories = [];
+                Object.keys(this.filters).forEach((item) => {
+                    if (this.filters[item].length > 0) {
+                        categories.push(item);
+                    }
+                })
+                return categories;
+            }
 
-                return item;
+            _filterValues(category, filterStringArray) {
+                //filter string array is not used, it's just to trigger rerender of dom-repeat
+                var filter;
+
+                if (typeof(this.filters[category][0]) === "number") {
+                    filter = [this.filters[category].join('-')];
+                } else {
+                    filter = this.filters[category];
+                }
+
+                return filter;
             }
 
             _settingType(type, expected) {
@@ -598,6 +616,7 @@
                 });
 
                 this.set("tableData", this.flattenedData);
+                this.set("filterStringArray", []);
             }
 
             _toggleSelectAll(e) {
@@ -756,7 +775,6 @@
                     return aA > bA ? 1 : -1;
                 }
             }
-
 
         }
         customElements.define(DataFilter.is, DataFilter);
