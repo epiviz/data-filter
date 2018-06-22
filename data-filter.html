@@ -204,11 +204,13 @@
                 grid-column: span 5;
                 overflow: auto;
                 max-height: inherit;
-                height: calc(100% - 75px);
+                height: calc(100% - 125px);
             }
 
             #filtersList {
                 grid-column: span 5;
+                overflow: auto;
+                height: 50px;
             }
 
         </style>
@@ -262,7 +264,7 @@
                 <div id="filtersList">
                     <template is="dom-repeat" items="{{_filterCategories(filterStringArray)}}" as="category" mutable-data>
                         <iron-label>{{category}}:</iron-label>
-                        <paper-tags class="filterItems" items="{{_filterValues(category, filterStringArray)}}" readonly></paper-tags>
+                        <paper-tags title="{{_filterValues(category, filterStringArray)}}" class="filterItems" items="{{_filterValues(category, filterStringArray)}}" readonly></paper-tags>
                     </template>
                 </div>
                 <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
