@@ -262,9 +262,9 @@
 
             <div id="selectionContainer">
                 <div id="filtersList">
-                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray)}}" as="category" mutable-data>
+                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray.*)}}" as="category" mutable-data>
                         <iron-label>{{category}}:</iron-label>
-                        <paper-tags title="{{_filterValues(category, filterStringArray)}}" class="filterItems" items="{{_filterValues(category, filterStringArray)}}" readonly></paper-tags>
+                        <paper-tags class="filterItems" items="[[_filterValues(category, filterStringArray.*)]]" prevent-remove-tag></paper-tags>
                     </template>
                 </div>
                 <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
@@ -424,7 +424,6 @@
             _filterValues(category, filterStringArray) {
                 //filter string array is not used, it's just to trigger rerender of dom-repeat
                 var filter;
-
                 if (typeof(this.filters[category][0]) === "number") {
                     filter = [this.filters[category].join('-')];
                 } else {
@@ -551,7 +550,7 @@
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
 
-                self.set("filterStringArray", filterString);
+                this.set("filterStringArray", filterString);
 
                 var fString = filterString.join(" && ");
                 var newData = this.flattenedData.filter(item => eval(fString));
