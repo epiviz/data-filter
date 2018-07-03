@@ -546,6 +546,10 @@
                     }
                 }
 
+                if (filterString.length === 0) {
+                    return;
+                }
+
                 filterString.forEach(function (val, index) {
                     filterString[index] = "(" + val.join(" || ") + ")";
                 });
