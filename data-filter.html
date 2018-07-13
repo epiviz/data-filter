@@ -23,10 +23,6 @@
 
 <script src="../lodash/lodash.js"></script>
 
-<!-- <link rel="import" href="../iron-list/iron-list.html"> -->
-<!-- <link rel="import" href="../iron-dropdown/iron-dropdown.html"> -->
-
-
 <dom-module id="data-filter">
     <template>
         <style>
@@ -39,7 +35,7 @@
             table.gridtable {
                 height: 100%;
                 width: 100%;
-                margin-left: 10px;
+                /* margin-left: 10px; */
                 /*width: 98%;*/
                 /* margin: 25px auto; */
                 grid-column: span 4;
@@ -212,7 +208,6 @@
                 overflow: auto;
                 height: 50px;
             }
-
         </style>
         <div class="container">
             <div id="filterContainer">
@@ -280,7 +275,7 @@
                         </template>
                     </paper-listbox>
                 </paper-menu-button>
-                <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Sample Selection Type">
+                <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
                     <paper-listbox slot="dropdown-content" selected="1">
                         <paper-item>Auto</paper-item>
                         <paper-item>Manual</paper-item>
@@ -334,22 +329,67 @@
     </template>
 
     <script>
+        /**
+         * # Data Filter Element
+         * A fast and customizable polymer component for filtering arrays. 
+         *
+         * ### Features
+         * - Automatically detect Attribute types from the `data` array.
+         * - Token based filtering of attributes
+         * - Flattens `data` for easy viewing as table
+         * - Customizable filter components
+         * - Client side filtering of large arrays
+         * - Supports Manual/Auto selection of rows
+         * - If `Auto` selected, supports configurable selection Modes
+         *   - Top - select top `x%` of rows
+         *   - Random - selection random `x%` of rows
+         *
+         * ### Types of Filters
+         *
+         * Attribute Type | Component | Component url
+         * ---------------|-----------|--------------
+         * Categorical | `paper-tags` | [webcomponents.org](https://www.webcomponents.org/element/PolymerEl/paper-tags)
+         * Numerical | `paper-rangle-slider` | [webcomponents.org](https://www.webcomponents.org/element/IftachSadeh/paper-range-slider)
+         * Boolean | `paper-toggle-button` | [webcomponents.org](https://www.webcomponents.org/element/@polymer/paper-toggle-button)
+         *
+         * ### Adding a data filter component to an application
+         * In typical use, just add `<data-filter>` to the HTML page:
+         *
+         *      <data-filter data="[]"></data-filter>
+         *
+         * @customElement
+         * @polymer
+         * @demo demo/index.html
+         */
         class DataFilter extends Polymer.MutableData(Polymer.Element) {
-            static get is() { return 'data-filter'; }
+            static get is() {
+                return 'data-filter';
+            }
 
             static get properties() {
                 return {
+                    /** 
+                     * List of filters set on the data 
+                     */
                     filters: {
                         type: Object,
                         notify: true,
                         value: {},
                     },
 
+                    /** 
+                     * List of filters as string 
+                     * @protected
+                     */
                     filterStringArray: {
                         type: Array,
                         notify: true
                     },
 
+                    /** 
+                     * Search for filters in sidebar 
+                     * @protected
+                     */
                     filterSearch: {
                         type: String,
                         notify: true,
@@ -357,44 +397,71 @@
                         observer: "_searchChanged"
                     },
 
+                    /** Data attribute to the element. Array of objects. */
                     data: {
                         type: Array,
                         observer: "_dataChanged"
                     },
 
+                    /** 
+                     * Internal data array used for rendering & filtering. 
+                     * @protected
+                     */
                     tableData: {
                         type: Array,
                         notify: true
                     },
 
+                    /**
+                     * Internal data array after flattening
+                     * @protected
+                     */
                     flattenedData: {
                         type: Array,
                         notify: true
                     },
 
+                    /**
+                     * Only show these columns from the `data` array. 
+                     */
                     showColumns: {
                         type: Array,
                         notify: true,
                         value: []
                     },
 
+                    /**
+                     * Used for fixing the order from the `data` array. 
+                     * @protected
+                     */
                     defaultColumns: {
                         type: Array,
                         value: []
                     },
 
+                    /**
+                     * Default Available filter attributes on the `data` array. 
+                     * @protected
+                     */
                     _defaultAttributes: {
                         type: Array,
                         value: [],
                         notify: true,
                     },
 
+                    /**
+                     * Available filter attributes on the `data` array. 
+                     * @protected
+                     */
                     _attributes: {
                         type: Array,
                         value: [],
                         notify: true
                     },
 
+                    /**
+                     * Selected rows from the `data` array. 
+                     */
                     selectedItems: {
                         type: Array,
                         notify: true
@@ -402,6 +469,9 @@
                 }
             }
 
+            /**
+             * Handler to sort columns in the table.
+             */
             sortColumn(e) {
                 var self = this;
                 // var category = e.target.id.split('-')[2];
@@ -411,6 +481,10 @@
                 this.$.dataTable.render();
             }
 
+            /**
+             * Currently applied filters.
+             * @protected
+             */
             _filterCategories(filters) {
                 var categories = [];
                 Object.keys(this.filters).forEach((item) => {
@@ -421,10 +495,13 @@
                 return categories;
             }
 
+            /**
+             * @protected
+             */
             _filterValues(category, filterStringArray) {
                 //filter string array is not used, it's just to trigger rerender of dom-repeat
                 var filter;
-                if (typeof(this.filters[category][0]) === "number") {
+                if (typeof (this.filters[category][0]) === "number") {
                     filter = [this.filters[category].join('-')];
                 } else {
                     filter = this.filters[category];
@@ -433,6 +510,11 @@
                 return filter;
             }
 
+            /**
+             * if setting type and expected are same. 
+             * @return {boolean} true if type is expected
+             * @protected
+             */
             _settingType(type, expected) {
                 if (type == expected) {
                     return true;
@@ -441,47 +523,87 @@
                 return false;
             }
 
+            /**
+             * Get minimum value of an attribute
+             * @return {number} minimum.
+             * @protected
+             */
             _getItemMin(item) {
                 return item.values[1];
             }
 
+            /**
+             * Get maximum value of an attribute
+             * @return {number} maximum.
+             * @protected
+             */
             _getItemMax(item) {
                 return item.values[0];
             }
 
+            /**
+             * DOM helper to render a row, column value in the table.
+             * @return {String} a row[column].
+             * @protected
+             */
             _getItem(row, column) {
                 return row[column];
             }
 
+            /**
+             * If only a few rows are selected in the table.
+             * @return {boolean} return true if indeterminate.
+             * @protected
+             */
             _isIndeterminate() {
-                if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length != this.tableData.length) {
+                if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length != this.tableData
+                    .length) {
                     return true;
                 }
                 return false;
             }
 
+            /**
+             * If all rows are selected in the table.
+             * @return {boolean} return true if all rows are selected.
+             * @protected
+             */
             _isAllSelected() {
-                if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length === this.tableData.length) {
+                if (this.selectedItems && this.selectedItems.length > 0 && this.selectedItems.length === this.tableData
+                    .length) {
                     return true;
                 }
                 return false;
             }
 
+            /**
+             * Update selection Container visibility.
+             * @protected
+             */
             _sContainerChanged(e) {
                 if (e.target.value == "Auto") {
-                    this.updateStyles({ '--selection-visibility': 'visible' });
-                }
-                else {
-                    this.updateStyles({ '--selection-visibility': 'none' });
+                    this.updateStyles({
+                        '--selection-visibility': 'visible'
+                    });
+                } else {
+                    this.updateStyles({
+                        '--selection-visibility': 'none'
+                    });
                 }
             }
 
+            /**
+             * Handler to toggle row selection.
+             */
             toggleSelection(e) {
                 var item = this.$.dataTable.itemForElement(e.target);
                 this.$.selector.select(item);
                 e.currentTarget.querySelector("input").checked = this.$.selector.isSelected(item);
             }
 
+            /**
+             * Handler to toggle columns.
+             */
             toggleColumn(e) {
                 var self = this;
                 if (!e.target.checked) {
@@ -498,6 +620,9 @@
                 }
             }
 
+            /**
+             * Handler to add a new filter.
+             */
             addFilter(e) {
                 var category = e.target.label;
 
@@ -509,17 +634,25 @@
                     if (e.target.valueArray.length > 0) {
                         this.filters[category] = e.target.valueArray;
                     }
-                }
-                else {
+                } else {
                     this.filters[category].push(e.detail);
                 }
             }
 
+            /**
+             * Handler to add numerical range filter.
+             * @param {string} attribute to add filter in the `data`.
+             * @param {number} filter min
+             * @param {number} filter max.
+             */
             addSliderFilter(name, min, max) {
                 var category = name;
                 this.filters[category] = [min, max];
             }
 
+            /**
+             * Handler to apply all selected filters to the `data`
+             */
             applyFilters() {
                 var self = this;
                 var filterString = [];
@@ -534,7 +667,8 @@
                                 if (index == 0) {
                                     categoryFilters.push("item['" + key + "'] >= " + val);
                                 } else if (index == 1) {
-                                    categoryFilters[categoryFilters.length - 1] += " && item['" + key + "'] <= " + val;
+                                    categoryFilters[categoryFilters.length - 1] += " && item['" + key +
+                                        "'] <= " + val;
                                 }
                             } else {
                                 categoryFilters.push("item['" + key + "'] == " + val);
@@ -561,6 +695,9 @@
                 this.set("tableData", newData);
             }
 
+            /**
+             * Handler to apply `Auto` or `Manual`, `Top` or `Random` selection of rows to the table.
+             */
             applySelection(e) {
                 var self = this;
                 var selectionType = this.$.smode.value;
@@ -571,7 +708,9 @@
                 var count = Math.round((data.length * selectionperc) / 100);
 
                 var elems = self.shadowRoot.querySelectorAll(".row-check");
-                elems.forEach(function (elem) { elem.checked = false; });
+                elems.forEach(function (elem) {
+                    elem.checked = false;
+                });
 
                 if (selectionperc === 100) {
                     self._selectAll();
@@ -599,6 +738,9 @@
                 }
             }
 
+            /**
+             * Handler to reset all filters to `data`.
+             */
             resetFilters(e) {
                 var self = this;
 
@@ -624,32 +766,52 @@
                 this.set("filterStringArray", []);
             }
 
+            /**
+             * Handler to select all rows in the table.
+             * @param {string} attribute to add filter in the `data`.
+             * @param {number} filter min
+             * @param {number} filter max.
+             */
             _toggleSelectAll(e) {
                 var self = this;
                 if (e.target.checked) {
                     this._selectAll();
-                }
-                else {
+                } else {
                     this._deselectAll();
                 }
             }
 
+            /**
+             * Select all rows in the table.
+             */
             _selectAll() {
                 var self = this;
                 this.tableData.forEach(function (item) {
-                    if (!self.$.selector.isSelected(item)) { self.$.selector.select(item); }
+                    if (!self.$.selector.isSelected(item)) {
+                        self.$.selector.select(item);
+                    }
                 });
 
                 var elems = this.shadowRoot.querySelectorAll(".row-check");
-                elems.forEach(function (elem) { elem.checked = true; });
+                elems.forEach(function (elem) {
+                    elem.checked = true;
+                });
             }
 
+            /**
+             * Deselect all rows in the table.
+             */
             _deselectAll() {
                 this.$.selector.clearSelection();
                 var elems = this.shadowRoot.querySelectorAll(".row-check");
-                elems.forEach(function (elem) { elem.checked = false; });
+                elems.forEach(function (elem) {
+                    elem.checked = false;
+                });
             }
 
+            /**
+             * Handler that resets the components if the data attribute changes.
+             */
             _dataChanged(newData, oldData) {
                 var self = this;
 
@@ -682,6 +844,9 @@
                 }, 1000);
             }
 
+            /**
+             * Handler that updates the search fo filter components in the sidebar.
+             */
             _searchChanged(newVal, oldVal) {
                 var self = this;
                 this._attributes.forEach(function (item, index) {
@@ -693,19 +858,30 @@
                 });
             }
 
+            /**
+             * Handler to reset search.
+             */
             _resetFilterSearch(e) {
                 this.set("filterSearch", '');
             }
 
+            /**
+             * Generate attrivbutes from the data array and figure out column types.
+             * @protected
+             */
             _buildAttributes(data, columns) {
                 var self = this;
                 var attributes = [];
                 var parsedData = {};
 
-                data.forEach(function (d) { d.checked = false; });
+                data.forEach(function (d) {
+                    d.checked = false;
+                });
 
                 columns.forEach(function (key) {
-                    parsedData[key] = data.map(function (x) { return x[key]; });
+                    parsedData[key] = data.map(function (x) {
+                        return x[key];
+                    });
                     var isNum = !parsedData[key].some(isNaN);
                     self.filters[key] = [];
 
@@ -713,12 +889,16 @@
                         attributes.push({
                             "name": key,
                             "type": "number",
-                            "values": [parsedData[key].reduce(function (a, b) { return Math.max(a, b); }),
-                            parsedData[key].reduce(function (a, b) { return Math.min(a, b); })],
+                            "values": [parsedData[key].reduce(function (a, b) {
+                                    return Math.max(a, b);
+                                }),
+                                parsedData[key].reduce(function (a, b) {
+                                    return Math.min(a, b);
+                                })
+                            ],
                             "hidden": false,
                         });
-                    }
-                    else {
+                    } else {
                         var isBoolean = !parsedData[key].some(isNaN);
 
                         if (isBoolean) {
@@ -728,12 +908,13 @@
                                 "values": [true, false],
                                 "hidden": false,
                             });
-                        }
-                        else {
+                        } else {
                             attributes.push({
                                 "name": key,
                                 "type": "category",
-                                "values": _.filter(_.uniq(parsedData[key]), (o) => { return !(o === undefined) }),
+                                "values": _.filter(_.uniq(parsedData[key]), (o) => {
+                                    return !(o === undefined)
+                                }),
                                 "hidden": false,
                             });
                         }
@@ -743,8 +924,13 @@
                 return attributes;
             }
 
+            /**
+             * Flatten the `data` array.
+             * @protected
+             */
             _flattenObject(data) {
                 var result = {};
+
                 function _flatten(cur, prop) {
                     if (Object(cur) !== cur) {
                         result[prop] = cur;
@@ -767,6 +953,9 @@
                 return result;
             }
 
+            /**
+             * Helper Sort function.
+             */
             _sortAlphaNum(a, b) {
                 var reA = /[^a-zA-Z]/g;
                 var reN = /[^0-9]/g;
