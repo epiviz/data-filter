@@ -2,70 +2,52 @@
 <html>
 
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+  <title>data-filter demo</title>
+
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+  <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
   <link rel="import" href="../data-filter.html">
+
+  <custom-style>
+    <style is="custom-style" include="demo-pages-shared-styles">
+      .vertical-section-container {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      data-filter {
+        max-height: 500px;
+      }
+    </style>
+  </custom-style>
 </head>
 
 <body>
-  <!-- <h3> Selecting Columns </h3> -->
-  <!-- data='{"category": ["cat", "dig", "pol", "cat", "mon"], "numbers": [1,2,3,4,5], "boolean": [true, false, false, true, false]}' -->
-  <!-- <data-filter 
-      data='[{"id":1,"gender":"Male","category":"Lexus","eid":"89-7422134"},{"id":2,"gender":"Female","category":"Land Rover","eid":"13-0083923"},{"id":3,"gender":"Male","category":"Saturn","eid":"57-4260438"},{"id":4,"gender":"Female","category":"Maserati","eid":"58-8783926"},{"id":5,"gender":"Female","category":"Plymouth","eid":"67-5182853"},{"id":6,"gender":"Male","category":"Chevrolet","eid":"87-7992457"},{"id":7,"gender":"Male","category":"Volkswagen","eid":"12-7196317"},{"id":8,"gender":"Male","category":"Mazda","eid":"88-8362089"},{"id":9,"gender":"Male","category":"Chevrolet","eid":"90-6677452"},{"id":10,"gender":"Female","category":"Mitsubishi","eid":"25-3417784"},{"id":11,"gender":"Male","category":"Chevrolet","eid":"67-0378536"},{"id":12,"gender":"Male","category":"Oldsmobile","eid":"43-7106689"},{"id":13,"gender":"Male","category":"Mitsubishi","eid":"50-3635229"},{"id":14,"gender":"Female","category":"Saab","eid":"50-6486139"},{"id":15,"gender":"Male","category":"GMC","eid":"00-1033814"},{"id":16,"gender":"Female","category":"Pontiac","eid":"31-4515681"},{"id":17,"gender":"Female","category":"Toyota","eid":"84-9625877"},{"id":18,"gender":"Male","category":"MINI","eid":"67-6377480"},{"id":19,"gender":"Male","category":"GMC","eid":"57-3878062"},{"id":20,"gender":"Male","category":"Mazda","eid":"82-0952878"},{"id":21,"gender":"Female","category":"Honda","eid":"42-4265048"},{"id":22,"gender":"Male","category":"Oldsmobile","eid":"70-7808425"},{"id":23,"gender":"Male","category":"Acura","eid":"98-7681797"},{"id":24,"gender":"Male","category":"Lincoln","eid":"52-6658371"},{"id":25,"gender":"Male","category":"Mazda","eid":"26-5062883"}]'
-      show-columns='["id", "gender"]'
-    ></data-filter> -->
+  <div class="vertical-section-container centered">
+    <h4>Show All columns</h4>
+    <demo-snippet>
+      <template>
+        <data-filter data='[{"Age":21,"first_name":"Gerri","gender":"Male","Country":"Indonesia","Single?":false},{"Age":31,"first_name":"Sydelle","gender":"Female","Country":"China","Single?":false},{"Age":56,"first_name":"Thomasin","gender":"Female","Country":"Brazil","Single?":true},{"Age":75,"first_name":"Christian","gender":"Female","Country":"United States","Single?":false},{"Age":16,"first_name":"Ellwood","gender":"Male","Country":"China","Single?":false},{"Age":67,"first_name":"Dewain","gender":"Male","Country":"Indonesia","Single?":false},{"Age":51,"first_name":"Hilarius","gender":"Male","Country":"Mongolia","Single?":true},{"Age":76,"first_name":"Erl","gender":"Male","Country":"Cyprus","Single?":true},{"Age":53,"first_name":"Myron","gender":"Male","Country":"Canada","Single?":false},{"Age":23,"first_name":"Amalea","gender":"Female","Country":"Indonesia","Single?":true},{"Age":22,"first_name":"Vonny","gender":"Female","Country":"China","Single?":true},{"Age":25,"first_name":"Panchito","gender":"Male","Country":"China","Single?":true},{"Age":38,"first_name":"Thomas","gender":"Male","Country":"United States","Single?":true},{"Age":61,"first_name":"Brynn","gender":"Female","Country":"Indonesia","Single?":false},{"Age":43,"first_name":"Tana","gender":"Female","Country":"Portugal","Single?":false},{"Age":27,"first_name":"Vincents","gender":"Male","Country":"Indonesia","Single?":false},{"Age":37,"first_name":"Fonzie","gender":"Male","Country":"Argentina","Single?":false},{"Age":51,"first_name":"Ketti","gender":"Female","Country":"Philippines","Single?":false},{"Age":33,"first_name":"Rubina","gender":"Female","Country":"Indonesia","Single?":true},{"Age":32,"first_name":"Tomi","gender":"Female","Country":"China","Single?":false},{"Age":61,"first_name":"Rois","gender":"Female","Country":"Brazil","Single?":false},{"Age":20,"first_name":"Chrystel","gender":"Female","Country":"Indonesia","Single?":false},{"Age":53,"first_name":"Nana","gender":"Female","Country":"Russia","Single?":true},{"Age":50,"first_name":"Ellynn","gender":"Female","Country":"Russia","Single?":true},{"Age":42,"first_name":"Vasily","gender":"Male","Country":"France","Single?":false}]'></data-filter>
+      </template>
+    </demo-snippet>
 
-  <!-- <h3> All Columns </h3>
+    <h4>pre-select columns</h4>
+    <demo-snippet>
+      <template>
+        <data-filter data='[{"Age":21,"first_name":"Gerri","gender":"Male","Country":"Indonesia","Single?":false},{"Age":31,"first_name":"Sydelle","gender":"Female","Country":"China","Single?":false},{"Age":56,"first_name":"Thomasin","gender":"Female","Country":"Brazil","Single?":true},{"Age":75,"first_name":"Christian","gender":"Female","Country":"United States","Single?":false},{"Age":16,"first_name":"Ellwood","gender":"Male","Country":"China","Single?":false},{"Age":67,"first_name":"Dewain","gender":"Male","Country":"Indonesia","Single?":false},{"Age":51,"first_name":"Hilarius","gender":"Male","Country":"Mongolia","Single?":true},{"Age":76,"first_name":"Erl","gender":"Male","Country":"Cyprus","Single?":true},{"Age":53,"first_name":"Myron","gender":"Male","Country":"Canada","Single?":false},{"Age":23,"first_name":"Amalea","gender":"Female","Country":"Indonesia","Single?":true},{"Age":22,"first_name":"Vonny","gender":"Female","Country":"China","Single?":true},{"Age":25,"first_name":"Panchito","gender":"Male","Country":"China","Single?":true},{"Age":38,"first_name":"Thomas","gender":"Male","Country":"United States","Single?":true},{"Age":61,"first_name":"Brynn","gender":"Female","Country":"Indonesia","Single?":false},{"Age":43,"first_name":"Tana","gender":"Female","Country":"Portugal","Single?":false},{"Age":27,"first_name":"Vincents","gender":"Male","Country":"Indonesia","Single?":false},{"Age":37,"first_name":"Fonzie","gender":"Male","Country":"Argentina","Single?":false},{"Age":51,"first_name":"Ketti","gender":"Female","Country":"Philippines","Single?":false},{"Age":33,"first_name":"Rubina","gender":"Female","Country":"Indonesia","Single?":true},{"Age":32,"first_name":"Tomi","gender":"Female","Country":"China","Single?":false},{"Age":61,"first_name":"Rois","gender":"Female","Country":"Brazil","Single?":false},{"Age":20,"first_name":"Chrystel","gender":"Female","Country":"Indonesia","Single?":false},{"Age":53,"first_name":"Nana","gender":"Female","Country":"Russia","Single?":true},{"Age":50,"first_name":"Ellynn","gender":"Female","Country":"Russia","Single?":true},{"Age":42,"first_name":"Vasily","gender":"Male","Country":"France","Single?":false}]'
+          show-columns='["id", "gender", "Age"]'></data-filter>
+      </template>
+    </demo-snippet>
 
-    <data-filter 
-      data='[{"id":1,"gender":"Male","category":"Lexus","eid":"89-7422134"},{"id":2,"gender":"Female","category":"Land Rover","eid":"13-0083923"},{"id":3,"gender":"Male","category":"Saturn","eid":"57-4260438"},{"id":4,"gender":"Female","category":"Maserati","eid":"58-8783926"},{"id":5,"gender":"Female","category":"Plymouth","eid":"67-5182853"},{"id":6,"gender":"Male","category":"Chevrolet","eid":"87-7992457"},{"id":7,"gender":"Male","category":"Volkswagen","eid":"12-7196317"},{"id":8,"gender":"Male","category":"Mazda","eid":"88-8362089"},{"id":9,"gender":"Male","category":"Chevrolet","eid":"90-6677452"},{"id":10,"gender":"Female","category":"Mitsubishi","eid":"25-3417784"},{"id":11,"gender":"Male","category":"Chevrolet","eid":"67-0378536"},{"id":12,"gender":"Male","category":"Oldsmobile","eid":"43-7106689"},{"id":13,"gender":"Male","category":"Mitsubishi","eid":"50-3635229"},{"id":14,"gender":"Female","category":"Saab","eid":"50-6486139"},{"id":15,"gender":"Male","category":"GMC","eid":"00-1033814"},{"id":16,"gender":"Female","category":"Pontiac","eid":"31-4515681"},{"id":17,"gender":"Female","category":"Toyota","eid":"84-9625877"},{"id":18,"gender":"Male","category":"MINI","eid":"67-6377480"},{"id":19,"gender":"Male","category":"GMC","eid":"57-3878062"},{"id":20,"gender":"Male","category":"Mazda","eid":"82-0952878"},{"id":21,"gender":"Female","category":"Honda","eid":"42-4265048"},{"id":22,"gender":"Male","category":"Oldsmobile","eid":"70-7808425"},{"id":23,"gender":"Male","category":"Acura","eid":"98-7681797"},{"id":24,"gender":"Male","category":"Lincoln","eid":"52-6658371"},{"id":25,"gender":"Male","category":"Mazda","eid":"26-5062883"}]'
-    ></data-filter> -->
-
-  <h3>Using Metaviz dataset</h3>
-  <div id="metaviz">
-
+    <p> The dataset for this demo is generated using
+      <a href="https://mockaroo.com">mockaroo</a>
+    </p>
   </div>
-  <script>
-    window.addEventListener('WebComponentsReady', function () {
-      var xhttp = new XMLHttpRequest();
-      var params = "id=1&method=measurements&params[datasource]=msd16s";
-      xhttp.open("POST", "http://metaviz.cbcb.umd.edu/api", true);
-
-      //Send the proper header information along with the request
-      xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-      xhttp.onreadystatechange = function () {//Call a function when the state changes.
-        if (xhttp.readyState == 4 && xhttp.status == 200) {
-          var response = JSON.parse(xhttp.response);
-          var data = response.result;
-
-          var fdata = [];
-
-          // format response to array
-          for (var i = 0; i < data.id.length; i++) {
-
-            var tmp = {};
-            tmp.id = data.id[i];
-            tmp.sequencingType = data.sequencingType[i];
-            tmp.name = data.name[i];
-            tmp.annotation = data.annotation[i]
-            // var annotations = Object.keys(data.annotation[i]);
-            // annotations.forEach(function (anno) {
-            //   tmp[anno] = data.annotation[i][anno];
-            // });
-
-            fdata.push(tmp);
-          }
-
-          var table = document.createElement("data-filter");
-          document.getElementById("metaviz").appendChild(table);
-          table.setAttribute("data", JSON.stringify(fdata));
-        }
-      }
-      xhttp.send(params);
-    });
-
-  </script>
-
 </body>
 
 </html>
