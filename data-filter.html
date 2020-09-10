@@ -20,6 +20,10 @@
 <link rel="import" href="../paper-tags/paper-tags-input.html">
 <link rel="import" href="../paper-tags/paper-tags.html">
 <link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="../paper-item/paper-item.html">
+
 
 <script src="../lodash/lodash.js"></script>
 
@@ -29,6 +33,7 @@
             :host {
                 display: inline-block;
                 width: 100%;
+                height: 100%;
                 --selection-visibility: hidden;
             }
 
@@ -55,7 +60,8 @@
                 /* border: 1px solid #eee; */
                 padding: 7px 14px;
                 border-collapse: collapse;
-                text-align: center;
+                /* text-align: center; */
+                margin-left: 5px;
                 white-space: nowrap;
             }
 
@@ -136,7 +142,7 @@
 
             .container {
                 display: grid;
-                grid-template-columns: minmax(200px, 1fr) 4fr;
+                grid-template-columns: minmax(200px, 1fr) 3fr minmax(200px, 1fr);
                 max-height: inherit;
                 overflow-x: auto;
                 overflow-y: hidden;
@@ -163,23 +169,23 @@
                 padding: 0 10px;
                 display: grid;
                 grid-template-rows: auto 75px 100%;
-                grid-template-columns: auto repeat(4, minmax(100px, 1fr));
+                grid-template-columns: repeat(5, minmax(100px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
                 max-height: inherit;
-                height: 100%;
             }
 
             #filterContainer {
                 grid-column: 1;
                 max-height: inherit;
-                height: 100%;
             }
 
             #filterOptions {
                 overflow: auto;
                 max-height: inherit;
-                height: calc(100% - 100px);
+                /* height: calc(100% - 100px); */
+                margin-bottom: 5px;
+                height:auto;
             }
 
             #selector {
@@ -207,14 +213,47 @@
                 grid-column: span 5;
                 overflow: auto;
                 height: 50px;
+                
+            }
+
+            #cardContainer {
+                width: 100%;
+                @apply --layout-wrap;
+                grid-column: span 5;
+                max-height: inherit;
+                height: calc(100% - 125px);
+                overflow: auto;
+            }
+
+            .name { color: var(--paper-grey-600); margin: 10px 0; }
+
+            #cardContainer > paper-card {
+                box-sizing: border-box;
+                /* max-width: 184px; */
+                margin: 3px;
+                flex: 0 0 auto;
+            }
+
+            paper-icon-button.rate-icon {
+            --iron-icon-fill-color: white;
+            --iron-icon-stroke-color: var(--paper-grey-600);
+            }
+
+            #selectedContainer {
+                padding: 3px;
+                /* display: grid;
+                grid-column-gap: 15px;
+                grid-column: 3; */
+                max-height: inherit;
+                height: 100%;
+                /* margin: 3px; */
+                border-left: 1px solid gray;
             }
         </style>
         <div class="container">
             <div id="filterContainer">
-                <paper-button id="reset-button" on-click="resetFilters" raised>Reset</paper-button>
-                <paper-button id="apply-button" on-click="applyFilters" raised>Apply</paper-button>
                 <div id="searchbox">
-                    <paper-input value="{{filterSearch}}" no-label-float>
+                    <paper-input value="{{filterSearch}}" label="annotation" no-label-float>
                         <paper-icon-button icon="search" role="button" slot="prefix"></paper-icon-button>
                         <paper-icon-button icon="clear" slot="suffix" on-click="_resetFilterSearch"></paper-icon-button>
                     </paper-input>
@@ -222,7 +261,7 @@
                 <div id="filterOptions">
                     <template is="dom-repeat" items="{{_attributes}}">
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
-                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                            <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
                                     <paper-toggle-button name="{{item.name}}" on-checked-changed="addFilter"></paper-toggle-button>
                                     <iron-label for="{{item.id}}">{{input.label}}</iron-label>
@@ -230,20 +269,20 @@
                             </paper-collapse-item>
                         </template>
                         <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
-                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                            <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
-                                    <paper-tags-dropdown name="{{item.name}}" label="{{item.name}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
+                                    <paper-tags-dropdown name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
                                         vertical-offset="0" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                 </div>
                             </paper-collapse-item>
                         </template>
                         <template is="dom-if" if="[[_settingType(item.type, 'number')]]">
-                            <paper-collapse-item header="{{item.name}}" hidden$="{{item.hidden}}">
+                            <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
                                     <iron-label class="category-headers">
-                                        <div title="text">{{item.name}}</div>
-                                        <paper-range-slider pin name="{{item.name}}" label="{{item.name}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
+                                        <div title="text">{{_getSanitizeItemName(item.name)}}</div>
+                                        <paper-range-slider pin name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" class="slider" value-min=[[_getItemMin(item)]] value-max=[[_getItemMax(item)]]
                                             min=[[_getItemMin(item)]] max=[[_getItemMax(item)]]></paper-range-slider>
                                     </iron-label>
                                 </div>
@@ -251,6 +290,8 @@
                         </template>
                     </template>
                 </div>
+                <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
+                <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button>
             </div>
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
@@ -262,7 +303,7 @@
                         <paper-tags class="filterItems" items="[[_filterValues(category, filterStringArray.*)]]" prevent-remove-tag></paper-tags>
                     </template>
                 </div>
-                <paper-menu-button class="sItem sButton" id="columnSelector" ignore-select>
+                <paper-menu-button style="display: none;" hidden$="[[!_showTable(layoutCard)]]" class="sItem sButton" id="columnSelector" ignore-select>
                     <paper-button slot="dropdown-trigger">
                         Columns
                         <iron-icon icon="icons:expand-more"></iron-icon>
@@ -275,6 +316,12 @@
                         </template>
                     </paper-listbox>
                 </paper-menu-button>
+                <paper-dropdown name="sortColumn" label="Sort" value="{{sortCardColumn}}" no-animations
+                horizontal-align="left">
+                    <template is="dom-repeat" items="[[defaultColumns]]">
+                        <paper-item value$="[[item]]">[[item]]</paper-item>
+                    </template>
+                </paper-dropdown>
                 <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
                     <paper-listbox slot="dropdown-content" selected="1">
                         <paper-item>Auto</paper-item>
@@ -293,37 +340,94 @@
                         name="selection %" label="selection %" min=0 max=100 value=0></paper-range-slider>
                 </iron-label>
                 <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
-                <div id="tableContainer">
-                    <table class="gridtable">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox" checked="[[_isAllSelected(selectedItems.*)]]" indeterminate="[[_isIndeterminate(selectedItems.*)]]"
-                                        on-click="_toggleSelectAll">
-                                </th>
-                                <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                    <th class="table-headers" on-click="sortColumn">
-                                        <span>[[column]]
-                                            <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
-                                        </span>
+                <template is="dom-if" if="[[_showTable(layoutCard)]]">
+
+                    <div id="tableContainer">
+                        <table class="gridtable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" checked="[[_isAllSelected(selectedItems.*)]]" indeterminate="[[_isIndeterminate(selectedItems.*)]]"
+                                            on-click="_toggleSelectAll">
                                     </th>
-                                </template>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
-                                <tr on-click="toggleSelection">
-                                    <td>
-                                        <input class="row-check" type="checkbox">
-                                    </td>
                                     <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                        <td>[[ _getItem(row, column) ]]</td>
+                                        <th class="table-headers" on-click="sortColumn">
+                                            <span>[[_getSanitizeItemName(column)]]
+                                                <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
+                                            </span>
+                                        </th>
                                     </template>
                                 </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
+                                    <tr on-click="toggleSelection">
+                                        <td>
+                                            <input class="row-check" type="checkbox">
+                                        </td>
+                                        <template is="dom-repeat" items="[[showColumns]]" as="column">
+                                            <td>[[ _getItem(row, column) ]]</td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+                <template is="dom-if" if="[[!_showTable(layoutCard)]]">
+                    <div id="cardContainer">
+                        <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+                            <paper-card class="rate">
+                                <div class="card-content">
+                                  <!-- <div class="rate-header">Rate this album</div> -->
+                                  <div class="name">[[item.name]]</div>
+                                    <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
+                                        <div>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]]</div>
+                                    </template>
+                                  <!-- <paper-listbox>
+                                    <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
+                                        <paper-item>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]] </paper-item>
+                                    </template>
+                                  </paper-listbox> -->
+                                </div>
+                                <div class="card-actions">
+                                    <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
+                                        <paper-button on-click="_addItemToSelection">
+                                            <iron-icon icon="icons:check"></iron-icon>
+                                            Add to Selection
+                                        </paper-button>
+                                    </template>
+                                    <template restamp is="dom-if" if="{{_isItemSelected(item, _selected.*, tableData.*)}}">
+                                        <paper-button on-click="_removeItemFromSelection">
+                                            <iron-icon icon="icons:delete"></iron-icon>
+                                            Remove from Selection
+                                        </paper-button>
+                                    </template>
+                                </div>
+                                <div class="rate-image"></div>
+                              </paper-card>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div id="selectedContainer">
+                <template is="dom-if" if="[[!_showSelectedMeasurements(_selected)]]">
+                    <span>No measurements selected</span>
+                </template>
+                <template is="dom-if" if="[[_showSelectedMeasurements(_selected)]]">
+                    <paper-listbox>
+                        <template is="dom-repeat" items="[[_getSelectItemAsArray(_selected)]]" as="item">
+                            <paper-item>[[item]] </paper-item>
+                        </template>
+                      </paper-listbox>
+                </template>
+                <template is="dom-if" if="[[_showSelectedMeasurements(_selected)]]">
+                    <paper-button raised on-click="_clearSelected">
+                        <iron-icon icon="icons:delete"></iron-icon>
+                        Clear selection
+                    </paper-button> 
+                </template>           
             </div>
         </div>
     </template>
@@ -465,8 +569,127 @@
                     selectedItems: {
                         type: Array,
                         notify: true
+                        // observer: "_selectedItemsChanged"
+                    },
+
+                    layoutCard: {
+                        type: Boolean,
+                        notify: true,
+                        value: false
+                    },
+
+                    _selected: {
+                        type: Object,
+                        notify: true,
+                        value: {},
+                        observer: "_selectedSelChanged"
+                    },
+
+                    sortCardColumn: {
+                        type: String,
+                        notify: true,
+                        observer: "_sortColumnChanged"
                     }
                 }
+            }
+
+            connectedCallback() {
+                super.connectedCallback();
+                // this._selected = {};
+            }
+
+            _showTable(layoutCard) {
+                console.log("_showTable");
+                if (layoutCard) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            _sortColumnChanged(newVal, oldVal) {
+                var self = this;
+                if(self.sortCardColumn && self.sortCardColumn != "") {
+                    self.tableData = self.tableData.sort(function(a,b) {
+                        var vala = a[self.sortCardColumn].toLowerCase(), 
+                            valb = b[self.sortCardColumn].toLowerCase();
+
+                        if (vala < valb) {
+                            return -1
+                        }
+
+                        if (vala  > valb) {
+                            return 1;
+                        }
+
+                        return 0;
+                    });
+                }
+            }
+
+            _clearSelected(event) {
+                this._selected = {};
+            }
+
+            _getSelectItemAsArray(_selected) {
+                return Object.keys(_selected);
+            }
+
+            _getAnnotations(item) {
+                var ilist = Object.keys(item);
+                ilist = ilist.filter(function(e) { return !["id", "annotation.collection", "name"].includes(e); });
+                return ilist.slice(0,2);
+            }
+
+            _getItemAnnotation(item, anno) {
+                return item[anno];
+            }
+
+            _selectedSelChanged(newVal, oldVal) {
+                var sitems = []
+                for (var l in this._selected) {
+                    sitems.push(this._selected[l]);
+                }
+
+                this.selectedItems = sitems;
+            }
+
+            _getCardIterator(tableData, _selected) {
+                return this.tableData;
+            }
+
+            _addItemToSelection(e) {
+                var self = this;
+                var item = e.model.item;
+
+                this._selected[item.id] = item;
+                this.notifyPath("_selected", this._selected);
+                // this.set("_selected", this._selected);
+                // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', true);
+                // this.shadowRoot.querySelector("#cardRepeater").render();
+            }
+
+            _removeItemFromSelection(e) {
+                var item = e.model.item;
+
+                delete this._selected[item.id];
+                this.notifyPath("_selected", this._selected);
+                // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', false);
+                // this.shadowRoot.querySelector("#cardRepeater").render();
+
+            }
+
+            _showSelectedMeasurements(_selected) {
+                return _selected && Object.keys(_selected).length > 0;
+            }
+
+            _isItemSelected(item, _selected) {
+                return Object.keys(this._selected).includes(item.id);
+            }
+
+
+            _getSanitizeItemName(name) {
+                return name.replace("annotation.", "")
             }
 
             /**
@@ -493,6 +716,12 @@
                     }
                 })
                 return categories;
+            }
+
+            _selectedItemsChanged() {
+                var self = this;
+                // for now
+                self._deselectAll();
             }
 
             /**
@@ -656,6 +885,8 @@
             applyFilters() {
                 var self = this;
                 var filterString = [];
+                // self.selectedItems = [];
+                self._deselectAll();
 
                 for (var key in this.filters) {
                     var categoryFilters = []
@@ -681,6 +912,8 @@
                 }
 
                 if (filterString.length === 0) {
+                    self.tableData = self.flattenedData;
+                    self._sortColumnChanged();
                     return;
                 }
 
@@ -692,7 +925,9 @@
 
                 var fString = filterString.join(" && ");
                 var newData = this.flattenedData.filter(item => eval(fString));
-                this.set("tableData", newData);
+                self.set("tableData", newData);
+
+                self._sortColumnChanged();
             }
 
             /**
@@ -802,11 +1037,11 @@
              * Deselect all rows in the table.
              */
             _deselectAll() {
-                this.$.selector.clearSelection();
-                var elems = this.shadowRoot.querySelectorAll(".row-check");
-                elems.forEach(function (elem) {
-                    elem.checked = false;
-                });
+                // this.$.selector.clearSelection();
+                // var elems = this.shadowRoot.querySelectorAll(".row-check");
+                // elems.forEach(function (elem) {
+                //     elem.checked = false;
+                // });
             }
 
             /**
@@ -822,14 +1057,22 @@
                 data = data.map(self._flattenObject);
 
                 this.set('flattenedData', data);
-                self.tableData = self.flattenedData;
+                // self.tableData = self.flattenedData;
+                self.applyFilters();
+
+                var allColumns = []
+                self.tableData.forEach(function(td) {
+                    allColumns = allColumns.concat(Object.keys(td));
+                });
+
+                allColumns = _.uniq(allColumns)
 
                 if (self.showColumns.length == 0) {
-                    self.set("showColumns", Object.keys(self.tableData[0]));
-                    self.set("defaultColumns", Object.keys(self.tableData[0]));
+                    self.set("showColumns", allColumns.filter(function(e) { return !["id", "annotation.collection"].includes(e); }));
+                    self.set("defaultColumns", allColumns);
                 }
 
-                var attributes = self._buildAttributes(self.tableData, self.showColumns);
+                var attributes = self._buildAttributes(self.flattenedData, self.showColumns);
                 self._attributes = attributes;
 
                 // TODO: Replace with polymer's this.async
@@ -842,6 +1085,7 @@
                         });
                     }
                 }, 1000);
+
             }
 
             /**
