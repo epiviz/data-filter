@@ -218,11 +218,12 @@
 
             #cardContainer {
                 width: 100%;
-                @apply --layout-wrap;
+                /* @apply --layout-wrap; */
+                @apply --layout-vertical;
                 grid-column: span 5;
                 max-height: inherit;
                 height: calc(100% - 125px);
-                overflow: auto;
+                overflow-y: auto;
             }
 
             .name { color: var(--paper-grey-600); margin: 10px 0; }
@@ -230,8 +231,27 @@
             #cardContainer > paper-card {
                 box-sizing: border-box;
                 /* max-width: 184px; */
-                margin: 3px;
-                flex: 0 0 auto;
+                margin: 2px;
+                padding: 3px 10px;
+                /* flex: 0 0 auto; */
+                display: grid;
+                grid-template-columns: 1fr 2fr 50px;
+                align-items: center;
+            }
+
+            .header-card {
+                grid-column: 1;
+                color: black;
+                word-wrap: break-word;
+            }
+
+            .anno-card {
+                grid-column: 2;
+                word-wrap: break-word;
+            }
+
+            .button-card {
+                grid-column: 3;
             }
 
             paper-icon-button.rate-icon {
@@ -247,7 +267,7 @@
                 max-height: inherit;
                 height: 100%;
                 /* margin: 3px; */
-                border-left: 1px solid gray;
+                /* border-left: 1px solid gray; */
             }
         </style>
         <div class="container">
@@ -319,7 +339,7 @@
                 <paper-dropdown name="sortColumn" label="Sort" value="{{sortCardColumn}}" no-animations
                 horizontal-align="left">
                     <template is="dom-repeat" items="[[defaultColumns]]">
-                        <paper-item value$="[[item]]">[[item]]</paper-item>
+                        <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
                     </template>
                 </paper-dropdown>
                 <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
@@ -376,19 +396,32 @@
                 </template>
                 <template is="dom-if" if="[[!_showTable(layoutCard)]]">
                     <div id="cardContainer">
-                        <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
-                            <paper-card class="rate">
+                        <template is="dom-if" if="[[!_showCardsMeasurements(tableData.*, _selected.*)]]">
+                            <div style="text-align: center;">All measurement are either selected or choose a different chart or collection</div>
+                        </template>
+                        <template is="dom-if" if="[[_showCardsMeasurements(tableData.*, _selected.*)]]">
+                            <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+                                <paper-card>
+                                    <span class="header-card">[[item.name]]</span>
+                                    <span class="anno-card">[[_getAnnotationsAsString(item)]]</span>
+                                    <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
+                                        <!-- <paper-button raised class="button-card" on-click="_addItemToSelection">
+                                            <iron-icon icon="icons:add"></iron-icon>
+                                        </paper-button> -->
+                                        <paper-icon-button icon="icons:add" on-click="_addItemToSelection"></paper-icon-button>
+                                    </template>
+                                </paper-card>
+                            </template>                        
+                        </template>
+
+                      <!--    <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+        
+                           <paper-card class="rate">
                                 <div class="card-content">
-                                  <!-- <div class="rate-header">Rate this album</div> -->
                                   <div class="name">[[item.name]]</div>
                                     <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
                                         <div>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]]</div>
                                     </template>
-                                  <!-- <paper-listbox>
-                                    <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
-                                        <paper-item>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]] </paper-item>
-                                    </template>
-                                  </paper-listbox> -->
                                 </div>
                                 <div class="card-actions">
                                     <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
@@ -404,28 +437,30 @@
                                         </paper-button>
                                     </template>
                                 </div>
-                                <div class="rate-image"></div>
-                              </paper-card>
-                        </template>
+                              </paper-card> 
+                        </template>-->
                     </div>
                 </template>
             </div>
 
             <div id="selectedContainer">
+                <h3 style="text-align: center;">Selected Measurements</h3>
                 <template is="dom-if" if="[[!_showSelectedMeasurements(_selected)]]">
-                    <span>No measurements selected</span>
+                    <div style="text-align: center;">No measurements selected</div>
                 </template>
                 <template is="dom-if" if="[[_showSelectedMeasurements(_selected)]]">
                     <paper-listbox>
                         <template is="dom-repeat" items="[[_getSelectItemAsArray(_selected)]]" as="item">
-                            <paper-item>[[item]] </paper-item>
+                            <paper-item>[[item]] 
+                                <paper-icon-button icon="icons:clear" on-click="_removeItemFromSelection"></paper-icon-button>
+                            </paper-item>
                         </template>
                       </paper-listbox>
                 </template>
                 <template is="dom-if" if="[[_showSelectedMeasurements(_selected)]]">
                     <paper-button raised on-click="_clearSelected">
                         <iron-icon icon="icons:delete"></iron-icon>
-                        Clear selection
+                        Clear all
                     </paper-button> 
                 </template>           
             </div>
@@ -607,12 +642,23 @@
                 return false;
             }
 
+            _showCardsMeasurements(tableData, _selected) {
+                var self = this;
+                var data = self._getCardIterator();
+
+                if (data.length > 0) {
+                    return true;
+                }
+
+                return false;
+            }
+
             _sortColumnChanged(newVal, oldVal) {
                 var self = this;
                 if(self.sortCardColumn && self.sortCardColumn != "") {
                     self.tableData = self.tableData.sort(function(a,b) {
-                        var vala = a[self.sortCardColumn].toLowerCase(), 
-                            valb = b[self.sortCardColumn].toLowerCase();
+                        var vala = a[self.sortCardColumn] ? a[self.sortCardColumn].toLowerCase() : "", 
+                            valb = b[self.sortCardColumn] ? b[self.sortCardColumn].toLowerCase() : "";
 
                         if (vala < valb) {
                             return -1
@@ -637,8 +683,21 @@
 
             _getAnnotations(item) {
                 var ilist = Object.keys(item);
-                ilist = ilist.filter(function(e) { return !["id", "annotation.collection", "name"].includes(e); });
+                ilist = ilist.filter(function(e) { return !["id", "annotation.collection", "name", "checked"].includes(e); });
                 return ilist.slice(0,2);
+            }
+
+            _getAnnotationsAsString(item) {
+                var self = this;
+                var ilist = Object.keys(item);
+
+                ilist = ilist.filter(function(e) { return !["id", "annotation.collection", "name", "checked"].includes(e); });
+                var strilist = [];
+                ilist.forEach(function(k) {
+                    strilist.push(self._getSanitizeItemName(k) + " : " + item[k]);
+                });
+
+                return strilist.join(", ")
             }
 
             _getItemAnnotation(item, anno) {
@@ -655,7 +714,13 @@
             }
 
             _getCardIterator(tableData, _selected) {
-                return this.tableData;
+                var self = this, ddata = [];
+                this.tableData.forEach(function(m) {
+                    if (!Object.keys(self._selected).includes(m.id)) {
+                        ddata.push(m);
+                    }
+                });
+                return ddata;
             }
 
             _addItemToSelection(e) {
@@ -672,7 +737,7 @@
             _removeItemFromSelection(e) {
                 var item = e.model.item;
 
-                delete this._selected[item.id];
+                delete this._selected[item];
                 this.notifyPath("_selected", this._selected);
                 // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', false);
                 // this.shadowRoot.querySelector("#cardRepeater").render();
@@ -1051,6 +1116,8 @@
                 var self = this;
 
                 var data = self.data;
+
+                // self._selected = {};
 
                 // sanitize data - flatten array
 
