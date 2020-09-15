@@ -142,7 +142,7 @@
 
             .container {
                 display: grid;
-                grid-template-columns: minmax(200px, 1fr) 3fr minmax(200px, 1fr);
+                grid-template-columns: minmax(150px, 1fr) 3fr minmax(150px, 1fr);
                 max-height: inherit;
                 overflow-x: auto;
                 overflow-y: hidden;
@@ -169,7 +169,7 @@
                 padding: 0 10px;
                 display: grid;
                 grid-template-rows: auto 75px 100%;
-                grid-template-columns: repeat(5, minmax(100px, 1fr));
+                grid-template-columns: repeat(5, minmax(50px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
                 max-height: inherit;
@@ -202,7 +202,7 @@
             }
 
             #tableContainer {
-                width: 100%;
+                /* width: 100%; */
                 grid-column: span 5;
                 overflow: auto;
                 max-height: inherit;
@@ -217,7 +217,7 @@
             }
 
             #cardContainer {
-                width: 100%;
+                /* width: 100%; */
                 /* @apply --layout-wrap; */
                 @apply --layout-vertical;
                 grid-column: span 5;
@@ -235,26 +235,42 @@
                 padding: 3px 10px;
                 /* flex: 0 0 auto; */
                 display: grid;
-                grid-template-columns: 150px auto 50px;
+                grid-template-columns: auto 50px;
                 align-items: center;
             }
 
-            .header-card {
+            .content-card {
                 grid-column: 1;
-                word-wrap: break-word;
+                word-break: break-word;
+                padding: 5px;
+            }
+
+            .header-card {
+                /* grid-column: 1; */
+                /* word-wrap: break-word; */
+                word-break: break-word;
                 /* color: #4285f4; */
                 color: black;
-                padding: 5px;
+                /* padding: 5px; */
             }
 
             .anno-card {
                 color: grey;
-                grid-column: 2;
-                word-wrap: break-word;
+                /* grid-column: 2; */
+                word-break: break-all;
+                cursor: pointer;
+            }
+
+            .truncate-text {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2; /* number of lines to show */
+                -webkit-box-orient: vertical;
             }
 
             .button-card {
-                grid-column: 3;
+                grid-column: 2;
             }
 
             paper-icon-button.rate-icon {
@@ -268,6 +284,7 @@
                 grid-column-gap: 15px;
                 grid-column: 3; */
                 max-height: inherit;
+                min-width: 150px;
                 height: 100%;
                 /* margin: 3px; */
                 /* border-left: 1px solid gray; */
@@ -280,6 +297,10 @@
                 padding: 5px;
                 margin: 3px;
                 border-bottom: 1px solid lightgrey;
+            }
+
+            paper-collapse-item {
+                cursor: pointer;
             }
         </style>
         <div class="container">
@@ -414,8 +435,10 @@
                         <template is="dom-if" if="[[_showCardsMeasurements(tableData.*, _selected.*)]]">
                             <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
                                 <paper-card>
-                                    <span class="header-card">[[item.name]]</span>
-                                    <span class="anno-card">[[_getAnnotationsAsString(item)]]</span>
+                                    <div class="content-card">
+                                        <span class="header-card">[[item.name]]</span><br/>
+                                        <span class="anno-card truncate-text" on-tap="_ToggleTruncate">[[_getAnnotationsAsString(item)]]</span>
+                                    </div>
                                     <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
                                         <!-- <paper-button raised class="button-card" on-click="_addItemToSelection">
                                             <iron-icon icon="icons:add"></iron-icon>
@@ -715,7 +738,12 @@
                     strilist.push(self._getSanitizeItemName(k) + " : " + item[k]);
                 });
 
-                return strilist.join(", ")
+                return strilist.join(" | ")
+            }
+
+            _ToggleTruncate(e) {
+                console.log(e.target);
+                e.target.classList.toggle("truncate-text");
             }
 
             _getItemAnnotation(item, anno) {
@@ -1021,6 +1049,8 @@
                 var selectionType = this.$.smode.value;
                 var selectionperc = this.$.sperc.valueMax;
 
+                self._selected = {};
+
                 self.$.selector.clearSelection();
                 var data = _.range(self.tableData.length);
                 var count = Math.round((data.length * selectionperc) / 100);
@@ -1031,29 +1061,40 @@
                 });
 
                 if (selectionperc === 100) {
-                    self._selectAll();
+                    // self._selectAll();
+                    sellf._selected = self.tableData;
                     return;
                 }
 
                 switch (selectionType) {
                     case 'Random':
-                        var randomSamples = _.sampleSize(data, count);
-                        _.each(randomSamples, function (rs) {
-                            if (!self.$.selector.isSelected(self.tableData[rs])) {
-                                self.$.selector.select(self.tableData[rs]);
-                            }
-                            elems[rs].checked = true;
+                        var randomSamples = _.sampleSize(self.tableData, count);
+                        // self._selected = randomSamples;
+                        _.each(randomSamples, function(rs) {
+                            // var relem = data[rs];
+                            self._selected[rs.id] = rs;
                         });
+                        // _.each(randomSamples, function (rs) {
+                        //     if (!self.$.selector.isSelected(self.tableData[rs])) {
+                        //         self.$.selector.select(self.tableData[rs]);
+                        //     }
+                        //     elems[rs].checked = true;
+                        // });
                         break;
                     case 'Top':
-                        _.each(_.slice(data, 0, count), function (rs) {
-                            if (!self.$.selector.isSelected(self.tableData[rs])) {
-                                self.$.selector.select(self.tableData[rs]);
-                            }
-                            elems[rs].checked = true;
+                        _.each(_.slice(self.tableData, 0, count), function (rs) {
+                            self._selected[rs.id] = rs;
                         });
+                        // _.each(_.slice(data, 0, count), function (rs) {
+                        //     if (!self.$.selector.isSelected(self.tableData[rs])) {
+                        //         self.$.selector.select(self.tableData[rs]);
+                        //     }
+                        //     elems[rs].checked = true;
+                        // });
                         break;
                 }
+
+                self.notifyPath("_selected");
             }
 
             /**
