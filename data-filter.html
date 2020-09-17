@@ -312,7 +312,7 @@
                     </paper-input>
                 </div>
                 <div id="filterOptions">
-                    <template is="dom-repeat" items="{{_attributes}}">
+                    <template is="dom-repeat" items="{{_getFilterItems(_attributes, filters.*)}}">
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
@@ -325,7 +325,7 @@
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
                                     <paper-tags-dropdown name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
-                                        vertical-offset="0" horizontal-offset="-150">
+                                        value-array=[[_getItemValue(item)]] vertical-offset="0" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                 </div>
                             </paper-collapse-item>
@@ -351,8 +351,8 @@
 
             <div id="selectionContainer">
                 <div id="filtersList">
-                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray.*)}}" as="category" mutable-data>
-                        <iron-label>{{category}}:</iron-label>
+                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray.*, filters.*)}}" as="category" mutable-data>
+                        <iron-label>{{_getSanitizeItemName(category)}}:</iron-label>
                         <paper-tags class="filterItems" items="[[_filterValues(category, filterStringArray.*)]]" prevent-remove-tag></paper-tags>
                     </template>
                 </div>
@@ -555,6 +555,7 @@
                         type: Object,
                         notify: true,
                         value: {},
+                        observer: "_filtersChanged"
                     },
 
                     /** 
@@ -674,6 +675,53 @@
                 // this._selected = {};
             }
 
+            _filtersChanged(newVal, oldVal) {
+                var self = this;
+                var filterString = [];
+
+                for (var key in this.filters) {
+                    var categoryFilters = []
+                    this.filters[key].forEach(function (val, index) {
+                        if (val !== "Any") {
+                            if (typeof (val) === "string") {
+                                categoryFilters.push("item['" + key + "'] == '" + val + "'");
+                            } else if (typeof (val) === "number") {
+                                if (index == 0) {
+                                    categoryFilters.push("item['" + key + "'] >= " + val);
+                                } else if (index == 1) {
+                                    categoryFilters[categoryFilters.length - 1] += " && item['" + key +
+                                        "'] <= " + val;
+                                }
+                            } else {
+                                categoryFilters.push("item['" + key + "'] == " + val);
+                            }
+                        }
+                    });
+                    if (categoryFilters.length !== 0) {
+                        filterString.push(categoryFilters);
+                    }
+                }
+
+                if (filterString.length === 0) {
+                    this.set("filterStringArray", []);
+                    return;
+                }
+
+                filterString.forEach(function (val, index) {
+                    filterString[index] = "(" + val.join(" || ") + ")";
+                });
+
+                this.set("filterStringArray", filterString);
+            }
+
+            _getItemValue(item) {
+                return this.filters[item.name];
+            }
+
+            _getFilterItems(_attributes, filters) {
+                return _attributes;
+            }
+
             _showTable(layoutCard) {
                 console.log("_showTable");
                 if (layoutCard) {
@@ -724,15 +772,26 @@
 
             _getAnnotations(item) {
                 var ilist = Object.keys(item);
-                ilist = ilist.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "name", "checked"].includes(e); });
+                var excludelist = ["annotation._filetype", "id", "annotation.collection", "name", "checked", "type"]
+                for (var k in this.filters) {
+                    if (this.filters[k].length != 0) {
+                        excludelist.push(k);
+                    }
+                }
+                ilist = ilist.filter(function(e) { return !excludelist.includes(e); });
                 return ilist.slice(0,2);
             }
 
             _getAnnotationsAsString(item) {
                 var self = this;
                 var ilist = Object.keys(item);
-
-                ilist = ilist.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "name", "checked"].includes(e); });
+                var excludelist = ["annotation._filetype", "id", "annotation.collection", "name", "checked", "type"]
+                for (var k in this.filters) {
+                    if (this.filters[k].length != 0) {
+                        excludelist.push(k);
+                    }
+                }
+                ilist = ilist.filter(function(e) { return !excludelist.includes(e); });
                 var strilist = [];
                 ilist.forEach(function(k) {
                     strilist.push(self._getSanitizeItemName(k) + " : " + item[k]);
@@ -819,7 +878,7 @@
              * Currently applied filters.
              * @protected
              */
-            _filterCategories(filters) {
+            _filterCategories(filters, fs) {
                 var categories = [];
                 Object.keys(this.filters).forEach((item) => {
                     if (this.filters[item].length > 0) {
@@ -964,7 +1023,7 @@
              * Handler to add a new filter.
              */
             addFilter(e) {
-                var category = e.target.label;
+                var category = e.target.name;
 
                 if (e.target.type === "number") {
                     if (parseInt(e.detail)) {
@@ -1194,8 +1253,8 @@
                 allColumns = _.uniq(allColumns)
 
                 if (self.showColumns.length == 0) {
-                    self.set("showColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection"].includes(e); }));
-                    self.set("defaultColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection"].includes(e); }));
+                    self.set("showColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "type"].includes(e); }));
+                    self.set("defaultColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "type"].includes(e); }));
                 }
 
                 var attributes = self._buildAttributes(self.flattenedData, self.showColumns);
