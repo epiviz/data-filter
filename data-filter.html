@@ -349,10 +349,10 @@
                             </paper-collapse-item>
                         </template>
                         <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
-                            <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
+                            <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" opened="{{item.opened}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
                                     <paper-tags-dropdown name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
-                                        value-array=[[_getItemValue(item)]] vertical-offset="0" horizontal-offset="-150">
+                                        opened="[[item.opened]]" value-array=[[_getItemValue(item)]] vertical-offset="0" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                 </div>
                             </paper-collapse-item>
