@@ -418,8 +418,17 @@
                 </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
                     Selection [[selectionUnit.unit]]
-                    <paper-range-slider main-div-style="{ 'display': 'inline'}" id="sperc" class="sItem autoItem" single-slider always-show-pin
-                        name="selection [[selectionUnit.unit]]" label="selection [[selectionUnit.unit]]" min=[[selectionUnit.min]] max=[[selectionUnit.max]] value=[[selectionUnit.value]]></paper-range-slider>
+                    <paper-range-slider
+		      main-div-style="{ 'display': 'inline'}"
+		      id="sperc" class="sItem autoItem"
+		      single-slider
+		      always-show-pin
+		      name="selection [[selectionUnit.unit]]"
+		      label="selection [[selectionUnit.unit]]"
+		      min=[[selectionUnit.min]]
+		      max=[[selectionUnit.max]]
+		      value-max=[[selectionUnit.value]]
+		      ></paper-range-slider>
                 </iron-label>
                 <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
@@ -601,7 +610,8 @@
                             max: 100,
                             value: 0,
                             unit: '#',
-                        }
+                        },
+			observer: "_unitobserver"
                     },
 
                     /** 
@@ -637,6 +647,7 @@
                     tableData: {
                         type: Array,
                         notify: true,
+			observer: "_tableDataObserver"
                     },
 
                     /**
@@ -720,6 +731,10 @@
                 super.connectedCallback();
                 // this._selected = {};
             }
+
+	    _tableDataObserver(newVal, oldVal) {
+		this._updateUnits();
+	    }
 
             _filtersChanged(newVal, oldVal) {
                 var self = this;
@@ -879,6 +894,7 @@
                 }
 
                 this.selectedItems = sitems;
+		this._updateUnits();
             }
 
             _getCardIterator(tableData, _selected) {
@@ -1042,28 +1058,29 @@
              * change units of selection.
              * @protected
              */
-             _sModeChanged(e) {
+            _sModeChanged(e) {
                 self = this;
                 console.log('_sModeChanged', e.target.value);
                 switch(e.target.value) {
-                    case "Random #":
-                    case "Top #":
-                        this.selectionUnit = {
-                            min: 0,
-                            max: self.data?.length || 0,
-                            value: 0,
-                            unit: '#',
-                        };
-                        break;
-                    case "Random %":
-                    case "Top %":
-                    default:
-                        this.selectionUnit = {
-                            min: 0,
-                            max: 100,
-                            value: 0,
-                            unit: '%',
-                        };
+                case "Random #":
+                case "Top #":
+		    const itemsLength = self.data?.length || 0
+                    this.selectionUnit = {
+                        min: 0,
+                        max: itemsLength,
+                        value: itemsLength,
+                        unit: '#',
+                    };
+                    break;
+                case "Random %":
+                case "Top %":
+                default:
+                    this.selectionUnit = {
+                        min: 0,
+                        max: 100,
+                        value: 100,
+                        unit: '%',
+                    };
                 }
             }
             /**
@@ -1220,6 +1237,33 @@
                 self.set("tableData", self.tableData);
             }
 
+	    _updateUnits () {
+		console.log("uints update....");
+		console.log("res", this.tableData, this._selected);
+		if(!this.tableData?.length || !Object.keys(this._selected)?.length) {
+		    return;
+		}
+		switch(this.selectionUnit.unit) {
+                case "#":
+		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected)?.length || 0;
+		    this.selectionUnit = {
+                        min: 0,
+                        max: remindItemsLength,
+                        value: remindItemsLength,
+                        unit: '#',
+                    };
+                    break;
+                case "%":
+                default:
+		    this.selectionUnit = {
+                        min: 0,
+                        max: 100,
+                        value: 100,
+                        unit: '#',
+                    };
+                }
+	    }
+
             /**
              * Handler to apply `Auto` or `Manual`, `Top` or `Random` selection of rows to the table.
              */
@@ -1230,9 +1274,9 @@
                 console.log('valueMax', seceltionValue)
                 console.log('selectionType', selectionType)
                 console.log('units', this.selectionUnit);
-                self._selected = {};
+                // self._selected = {};
 
-                self.$.selector.clearSelection();
+                // self.$.selector.clearSelection();
                 var data = _.range(self.tableData.length);
                 var count;
                 switch(selectionType) {
@@ -1282,7 +1326,8 @@
                         break;
                 }
 
-                self.notifyPath("_selected");
+		self._updateUnits();
+		self.notifyPath("_selected");
             }
 
             /**
