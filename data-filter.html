@@ -842,6 +842,7 @@
 
             _clearSelected(event) {
                 this._selected = {};
+		this._updatUnits();
             }
 
             _getSelectItemAsArray(_selected) {
@@ -1059,18 +1060,10 @@
              * @protected
              */
             _sModeChanged(e) {
-                self = this;
-                console.log('_sModeChanged', e.target.value);
                 switch(e.target.value) {
                 case "Random #":
                 case "Top #":
-		    const itemsLength = self.data?.length || 0
-                    this.selectionUnit = {
-                        min: 0,
-                        max: itemsLength,
-                        value: itemsLength,
-                        unit: '#',
-                    };
+		    this._updateUnits(e.target.value);
                     break;
                 case "Random %":
                 case "Top %":
@@ -1237,15 +1230,17 @@
                 self.set("tableData", self.tableData);
             }
 
-	    _updateUnits () {
-		console.log("uints update....");
-		console.log("res", this.tableData, this._selected);
-		if(!this.tableData?.length || !Object.keys(this._selected)?.length) {
+	    _updateUnits(newUnit) {
+		console.log("update units", this.tableData, Object.keys(this._selected));
+		if(!this.tableData?.length) {
 		    return;
 		}
-		switch(this.selectionUnit.unit) {
-                case "#":
+		const unit = newUnit || this.selectionUnit.unit;
+		switch(unit) {
+                case "Top #":
+                case "Random #":
 		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected)?.length || 0;
+		    console.log(' reminds units', remindItemsLength);
 		    this.selectionUnit = {
                         min: 0,
                         max: remindItemsLength,
@@ -1253,13 +1248,14 @@
                         unit: '#',
                     };
                     break;
-                case "%":
+		case "Top %":
+                case "Random %":
                 default:
 		    this.selectionUnit = {
                         min: 0,
                         max: 100,
                         value: 100,
-                        unit: '#',
+                        unit: '%',
                     };
                 }
 	    }
