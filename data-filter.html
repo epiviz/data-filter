@@ -889,13 +889,13 @@
             }
 
             _selectedSelChanged(newVal, oldVal) {
-                var sitems = []
-                for (var l in this._selected) {
-                    sitems.push(this._selected[l]);
-                }
+        //         var sitems = []
+        //         for (var l in this._selected) {
+        //             sitems.push(this._selected[l]);
+        //         }
 
-                this.selectedItems = sitems;
-		this._updateUnits();
+        //         this.selectedItems = sitems;
+		// this._updateUnits();
             }
 
             _getCardIterator(tableData, _selected) {
@@ -968,10 +968,8 @@
                 return categories;
             }
 
-            _selectedItemsChanged() {
-                var self = this;
-                // for now
-                self._deselectAll();
+            _selectedItemsChanged(newVal, oldVal) {
+                this._selected = newVal;
             }
 
             /**
