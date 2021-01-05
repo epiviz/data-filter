@@ -1230,14 +1230,14 @@
 
 	    _updateUnits(newUnit) {
 		console.log("update units", this.tableData, Object.keys(this._selected));
-		if(!this.tableData?.length) {
+		if(!this.tableData.length) {
 		    return;
 		}
 		const unit = newUnit || this.selectionUnit.unit;
 		switch(unit) {
                 case "Top #":
                 case "Random #":
-		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected)?.length || 0;
+		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
 		    console.log(' reminds units', remindItemsLength);
 		    this.selectionUnit = {
                         min: 0,
