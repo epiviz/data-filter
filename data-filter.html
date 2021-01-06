@@ -408,16 +408,27 @@
                         <paper-item>Manual</paper-item>
                     </paper-listbox>
                 </paper-dropdown-menu>
-                <paper-dropdown-menu id="smode" class="sItem autoItem" label="select ">
+                <paper-dropdown-menu id="smode" class="sItem autoItem" on-value-changed="_sModeChanged" label="select ">
                     <paper-listbox slot="dropdown-content" selected="0">
-                        <paper-item>Random</paper-item>
-                        <paper-item>Top</paper-item>
+                        <paper-item>Random %</paper-item>
+                        <paper-item>Random #</paper-item>
+                        <paper-item>Top %</paper-item>
+                        <paper-item>Top #</paper-item>
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
-                    Selection %
-                    <paper-range-slider main-div-style="{ 'display': 'inline'}" id="sperc" class="sItem autoItem" single-slider always-show-pin
-                        name="selection %" label="selection %" min=0 max=100 value=0></paper-range-slider>
+                    Selection [[selectionUnit.unit]]
+                    <paper-range-slider
+		      main-div-style="{ 'display': 'inline'}"
+		      id="sperc" class="sItem autoItem"
+		      single-slider
+		      always-show-pin
+		      name="selection [[selectionUnit.unit]]"
+		      label="selection [[selectionUnit.unit]]"
+		      min=[[selectionUnit.min]]
+		      max=[[selectionUnit.max]]
+		      value-max=[[selectionUnit.value]]
+		      ></paper-range-slider>
                 </iron-label>
                 <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
@@ -589,6 +600,19 @@
                         value: {},
                         observer: "_filtersChanged"
                     },
+                    /** 
+                     * definition of units used in selection
+                     */
+                    selectionUnit: {
+                        type: Object,
+                        value: {
+                            min: 0,
+                            max: 100,
+                            value: 0,
+                            unit: '#',
+                        },
+			observer: "_unitobserver"
+                    },
 
                     /** 
                      * List of filters as string 
@@ -622,7 +646,8 @@
                      */
                     tableData: {
                         type: Array,
-                        notify: true
+                        notify: true,
+			observer: "_tableDataObserver"
                     },
 
                     /**
@@ -701,11 +726,15 @@
                     }
                 }
             }
-
+            
             connectedCallback() {
                 super.connectedCallback();
                 // this._selected = {};
             }
+
+	    _tableDataObserver(newVal, oldVal) {
+		this._updateUnits();
+	    }
 
             _filtersChanged(newVal, oldVal) {
                 var self = this;
@@ -813,6 +842,7 @@
 
             _clearSelected(event) {
                 this._selected = {};
+		this._updatUnits();
             }
 
             _getSelectItemAsArray(_selected) {
@@ -859,12 +889,13 @@
             }
 
             _selectedSelChanged(newVal, oldVal) {
-                var sitems = []
-                for (var l in this._selected) {
-                    sitems.push(this._selected[l]);
-                }
+        //         var sitems = []
+        //         for (var l in this._selected) {
+        //             sitems.push(this._selected[l]);
+        //         }
 
-                this.selectedItems = sitems;
+        //         this.selectedItems = sitems;
+		// this._updateUnits();
             }
 
             _getCardIterator(tableData, _selected) {
@@ -937,10 +968,8 @@
                 return categories;
             }
 
-            _selectedItemsChanged() {
-                var self = this;
-                // for now
-                self._deselectAll();
+            _selectedItemsChanged(newVal, oldVal) {
+                this._selected = newVal;
             }
 
             /**
@@ -1024,6 +1053,27 @@
                 return false;
             }
 
+            /**
+             * change units of selection.
+             * @protected
+             */
+            _sModeChanged(e) {
+                switch(e.target.value) {
+                case "Random #":
+                case "Top #":
+		    this._updateUnits(e.target.value);
+                    break;
+                case "Random %":
+                case "Top %":
+                default:
+                    this.selectionUnit = {
+                        min: 0,
+                        max: 100,
+                        value: 100,
+                        unit: '%',
+                    };
+                }
+            }
             /**
              * Update selection Container visibility.
              * @protected
@@ -1178,33 +1228,77 @@
                 self.set("tableData", self.tableData);
             }
 
+	    _updateUnits(newUnit) {
+		console.log("update units", this.tableData, Object.keys(this._selected));
+		if(!this.tableData.length) {
+		    return;
+		}
+		const unit = newUnit || this.selectionUnit.unit;
+		switch(unit) {
+                case "Top #":
+                case "Random #":
+		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
+		    console.log(' reminds units', remindItemsLength);
+		    this.selectionUnit = {
+                        min: 0,
+                        max: remindItemsLength,
+                        value: remindItemsLength,
+                        unit: '#',
+                    };
+                    break;
+		case "Top %":
+                case "Random %":
+                default:
+		    this.selectionUnit = {
+                        min: 0,
+                        max: 100,
+                        value: 100,
+                        unit: '%',
+                    };
+                }
+	    }
+
             /**
              * Handler to apply `Auto` or `Manual`, `Top` or `Random` selection of rows to the table.
              */
             applySelection(e) {
                 var self = this;
                 var selectionType = this.$.smode.value;
-                var selectionperc = this.$.sperc.valueMax;
+                var seceltionValue = this.$.sperc.valueMax;
+                console.log('valueMax', seceltionValue)
+                console.log('selectionType', selectionType)
+                console.log('units', this.selectionUnit);
+                // self._selected = {};
 
-                self._selected = {};
-
-                self.$.selector.clearSelection();
+                // self.$.selector.clearSelection();
                 var data = _.range(self.tableData.length);
-                var count = Math.round((data.length * selectionperc) / 100);
+                var count;
+                switch(selectionType) {
+                    case "Random #":
+                    case "Top #":
+                        count = seceltionValue;
+                        break;
+                    case "Random %":
+                    case "Top %":
+                    default:
+                        count = Math.round((data.length * seceltionValue) / 100);
+                }
+                
 
                 var elems = self.shadowRoot.querySelectorAll(".row-check");
                 elems.forEach(function (elem) {
                     elem.checked = false;
                 });
 
-                if (selectionperc === 100) {
+                if (seceltionValue === 100 || self.tableData <= count) {
                     // self._selectAll();
                     self._cardSelectAll();
                     return;
                 }
-
+                
                 switch (selectionType) {
-                    case 'Random':
+                    case 'Random %':
+                    case 'Random #':
                         var randomSamples = _.sampleSize(self.tableData, count);
                         // self._selected = randomSamples;
                         _.each(randomSamples, function(rs) {
@@ -1218,20 +1312,16 @@
                         //     elems[rs].checked = true;
                         // });
                         break;
-                    case 'Top':
+                    case 'Top #':
+                    case 'Top %':
                         _.each(_.slice(self.tableData, 0, count), function (rs) {
                             self._selected[rs.id] = rs;
                         });
-                        // _.each(_.slice(data, 0, count), function (rs) {
-                        //     if (!self.$.selector.isSelected(self.tableData[rs])) {
-                        //         self.$.selector.select(self.tableData[rs]);
-                        //     }
-                        //     elems[rs].checked = true;
-                        // });
                         break;
                 }
 
-                self.notifyPath("_selected");
+		self._updateUnits();
+		self.notifyPath("_selected");
             }
 
             /**
