@@ -396,12 +396,14 @@
                         </template>
                     </paper-listbox>
                 </paper-menu-button> -->
-                <paper-dropdown name="sortColumn" label="Sort" value="{{sortCardColumn}}" no-animations
+                <paper-dropdown-menu name="sortColumn" class="sItem" label="Sort" value="{{sortCardColumn}}" no-animations
                 horizontal-align="left">
+                    <paper-listbox slot="dropdown-content">
                     <template is="dom-repeat" items="[[defaultColumns]]">
                         <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
                     </template>
-                </paper-dropdown>
+                    </paper-listbox>
+                </paper-dropdown-menu>
                 <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
                     <paper-listbox slot="dropdown-content" selected="1">
                         <paper-item>Auto</paper-item>
