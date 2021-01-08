@@ -351,7 +351,7 @@
                         <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" opened="{{item.opened}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
-                                    <paper-tags-dropdown name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" on-value-array-changed="addFilter" type="{{item.type}}" items="{{item.values}}"
+                                    <paper-tags-dropdown name="{{item.name}}" label="{{_getSanitizeItemName(item.name)}}" on-value-array-changed="addFilter" type="{{item.type}}" items="[[_getItems(item)]]"
                                         opened="[[item.opened]]" value-array=[[_getItemValue(item)]] vertical-offset="0" horizontal-offset="-150">
                                     </paper-tags-dropdown>
                                 </div>
@@ -399,9 +399,9 @@
                 <paper-dropdown-menu name="sortColumn" class="sItem" label="Sort" value="{{sortCardColumn}}" no-animations
                 horizontal-align="left">
                     <paper-listbox slot="dropdown-content">
-                    <template is="dom-repeat" items="[[defaultColumns]]">
-                        <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
-                    </template>
+                        <template is="dom-repeat" items="[[defaultColumns]]">
+                            <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
+                        </template>
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
@@ -779,6 +779,11 @@
 
             _getItemValue(item) {
                 return this.filters[item.name];
+            }
+
+            _getItems(item) {
+                var res = item.values.filter((x) => {return x != null;});
+                return res;
             }
 
             _getFilterItems(_attributes, filters) {
