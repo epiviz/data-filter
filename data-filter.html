@@ -459,7 +459,7 @@
                                             <input class="row-check" type="checkbox">
                                         </td>
                                         <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                            <td>[[ _getItem(row, column) ]]</td>
+                                            <td>[[_getItem(row, column)]]</td>
                                         </template>
                                     </tr>
                                 </template>
@@ -613,7 +613,7 @@
                             value: 0,
                             unit: '#',
                         },
-			observer: "_unitobserver"
+			            observer: "_unitobserver"
                     },
 
                     /** 
@@ -649,7 +649,7 @@
                     tableData: {
                         type: Array,
                         notify: true,
-			observer: "_tableDataObserver"
+			            observer: "_tableDataObserver"
                     },
 
                     /**
@@ -734,9 +734,9 @@
                 // this._selected = {};
             }
 
-	    _tableDataObserver(newVal, oldVal) {
-		this._updateUnits();
-	    }
+            _tableDataObserver(newVal, oldVal) {
+                this._updateUnits();
+            }
 
             _filtersChanged(newVal, oldVal) {
                 var self = this;
@@ -896,13 +896,13 @@
             }
 
             _selectedSelChanged(newVal, oldVal) {
-        //         var sitems = []
-        //         for (var l in this._selected) {
-        //             sitems.push(this._selected[l]);
-        //         }
+                var sitems = []
+                for (var l in this._selected) {
+                    sitems.push(this._selected[l]);
+                }
 
-        //         this.selectedItems = sitems;
-		// this._updateUnits();
+                this.selectedItems = sitems;
+		        // this._updateUnits();
             }
 
             _getCardIterator(tableData, _selected) {
@@ -1068,7 +1068,7 @@
                 switch(e.target.value) {
                 case "Random #":
                 case "Top #":
-		    this._updateUnits(e.target.value);
+		            this._updateUnits(e.target.value);
                     break;
                 case "Random %":
                 case "Top %":
@@ -1235,35 +1235,37 @@
                 self.set("tableData", self.tableData);
             }
 
-	    _updateUnits(newUnit) {
-		console.log("update units", this.tableData, Object.keys(this._selected));
-		if(!this.tableData.length) {
-		    return;
-		}
-		const unit = newUnit || this.selectionUnit.unit;
-		switch(unit) {
-                case "Top #":
-                case "Random #":
-		    const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
-		    console.log(' reminds units', remindItemsLength);
-		    this.selectionUnit = {
-                        min: 0,
-                        max: remindItemsLength,
-                        value: remindItemsLength,
-                        unit: '#',
-                    };
-                    break;
-		case "Top %":
-                case "Random %":
-                default:
-		    this.selectionUnit = {
-                        min: 0,
-                        max: 100,
-                        value: 100,
-                        unit: '%',
-                    };
+            _updateUnits(newUnit) {
+                // console.log("update units", this.tableData, Object.keys(this._selected));
+                
+                if(!this.tableData || !this.tableData.length) {
+                    return;
                 }
-	    }
+
+                const unit = newUnit || this.selectionUnit.unit;
+                switch(unit) {
+                    case "Top #":
+                    case "Random #":
+                        const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
+                        console.log(' reminds units', remindItemsLength);
+                        this.selectionUnit = {
+                                min: 0,
+                                max: remindItemsLength,
+                                value: remindItemsLength,
+                                unit: '#',
+                            };
+                            break;
+                    case "Top %":
+                        case "Random %":
+                        default:
+                        this.selectionUnit = {
+                                min: 0,
+                                max: 100,
+                                value: 100,
+                                unit: '%',
+                            };
+                }
+            }
 
             /**
              * Handler to apply `Auto` or `Manual`, `Top` or `Random` selection of rows to the table.
@@ -1327,8 +1329,8 @@
                         break;
                 }
 
-		self._updateUnits();
-		self.notifyPath("_selected");
+                self._updateUnits();
+                self.notifyPath("_selected");
             }
 
             /**
