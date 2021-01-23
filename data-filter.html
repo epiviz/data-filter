@@ -782,7 +782,8 @@
             }
 
             _getItems(item) {
-                var res = item.values.filter((x) => {return x != null;});
+                // var res = item.values.filter((x) => {return x != null;});
+                var res = item.values.map(x => x == null ? 'missing' : x);
                 return res;
             }
 
