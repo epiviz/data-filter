@@ -1459,8 +1459,8 @@
              */
             _searchChanged(newVal, oldVal) {
                 var self = this;
-                this._attributes.forEach(function (item, index) {
-                    if (newVal === '' || item.name.toLowerCase().indexOf(newVal.toLowerCase()) !== -1) {
+                this._attributes.forEach((item, index) => {
+                    if (newVal === '' || this._getSanitizeItemName(item.name).toLowerCase().indexOf(newVal.toLowerCase()) !== -1) {
                         self.set("_attributes." + index + ".hidden", false);
                     } else {
                         self.set("_attributes." + index + ".hidden", true);
