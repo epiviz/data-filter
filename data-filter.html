@@ -339,7 +339,7 @@
                     </paper-input>
                 </div>
                 <div id="filterOptions">
-                    <template is="dom-repeat" items="{{_getFilterItems(_attributes, filters.*)}}">
+                    <template is="dom-repeat" items="{{_getFilterItems(_attributes.*, filters.*)}}">
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
@@ -788,7 +788,7 @@
             }
 
             _getFilterItems(_attributes, filters) {
-                return _attributes;
+                return this._attributes;
             }
 
             _showTable(layoutCard) {
