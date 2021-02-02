@@ -781,9 +781,15 @@
             }
 
             _getItems(item) {
-                // var res = item.values.filter((x) => {return x != null;});
-                var res = item.values.map(x => x == null ? 'missing' : x);
-                return res;
+                var res;
+                if (item.type != 'boolean') {
+                    // var res = item.values.filter((x) => {return x != null;});
+                    res = item.values.map(x => x == null ? 'missing' : String(x));
+                } else {
+                    res = item.values.filter((x) => {return x != null;});
+                }
+
+                return res.sort();
             }
 
             _getFilterItems(_attributes, filters) {
@@ -1419,10 +1425,10 @@
                 var data = self.data;
 
                 // self._selected = {};
-
                 // sanitize data - flatten array
 
                 data = data.map(self._flattenObject);
+                data = self._replaceNull(data);
                 self.showColumns = [];
                 self.resetFilters();
 
@@ -1443,7 +1449,7 @@
                 }
 
                 var attributes = self._buildAttributes(self.flattenedData, self.showColumns);
-                self._attributes = attributes;
+                // self._attributes = attributes;
                 self.set("_attributes", attributes);
 
                 // TODO: Replace with polymer's this.async
@@ -1456,7 +1462,6 @@
                         });
                     }
                 }, 1000);
-
             }
 
             /**
@@ -1490,6 +1495,15 @@
                   }),
                   "hidden": false,
               };
+
+            _replaceNull(data) {
+                data.forEach(d => {
+                    for (var k in d) {
+                        d[k] = d[k] || 'missing';
+                    }
+                });
+
+                return data
             }
 
             /**
@@ -1598,7 +1612,6 @@
                     return aA > bA ? 1 : -1;
                 }
             }
-
         }
         customElements.define(DataFilter.is, DataFilter);
     </script>
