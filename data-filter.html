@@ -1546,8 +1546,11 @@
                           "hidden": false,
                         });
                       } else {
-                        attributes.push(this._createCategoricalAttribute(key, parsedData));
-                      }
+                        var tattr = this._createCategoricalAttribute(key, parsedData);
+                            if (tattr.values.length > 1) {
+                                attributes.push(tattr)
+                            }                      
+                        }
                     } else {
                         var isBoolean = !parsedData[key].some(isNaN);
 
@@ -1559,7 +1562,10 @@
                                 "hidden": false,
                             });
                         } else {
-                            attributes.push(this._createCategoricalAttribute(key, parsedData));
+                            var tattr = this._createCategoricalAttribute(key, parsedData);
+                            if (tattr.values.length > 1) {
+                                attributes.push(tattr)
+                            }
                         }
                     }
                 });
