@@ -612,8 +612,7 @@
                             max: 100,
                             value: 0,
                             unit: '#',
-                        },
-			            observer: "_unitobserver"
+                        }
                     },
 
                     /** 
@@ -1480,7 +1479,6 @@
                 this.set("filterSearch", '');
             }
 
-
             _replaceNull(data) {
                 data.forEach(d => {
                     for (var k in d) {
@@ -1491,11 +1489,23 @@
                 return data
             }
 
+            _createCategoricalAttribute(key, parsedData) {
+              return {
+                  "name": key,
+                  "type": "category",
+                  "values": _.filter(_.uniq(parsedData[key]), (o) => {
+                      return !(o === undefined)
+                  }),
+                  "hidden": false,
+              };
+            }
+
             /**
              * Generate attrivbutes from the data array and figure out column types.
              * @protected
              */
             _buildAttributes(data, columns) {
+                const numberDataThreshhold = 5;
                 var self = this;
                 var attributes = [];
                 var parsedData = {};
@@ -1504,7 +1514,7 @@
                     d.checked = false;
                 });
 
-                columns.forEach(function (key) {
+                columns.forEach((key) => {
                     parsedData[key] = data.map(function (x) {
                         return x[key];
                     });
@@ -1512,18 +1522,25 @@
                     self.filters[key] = [];
 
                     if (isNum) {
+                      const amount = _.filter(_.uniq(parsedData[key]), o => {
+                        return !(o === undefined);
+                      }).length;
+                      if (amount > numberDataThreshhold) {
                         attributes.push({
-                            "name": key,
-                            "type": "number",
-                            "values": [parsedData[key].reduce(function (a, b) {
-                                    return Math.max(a, b);
-                                }),
-                                parsedData[key].reduce(function (a, b) {
-                                    return Math.min(a, b);
-                                })
-                            ],
-                            "hidden": false,
+                          "name": key,
+                          "type": "number",
+                          "values": [parsedData[key].reduce(function (a, b) {
+                                  return Math.max(a, b);
+                              }),
+                              parsedData[key].reduce(function (a, b) {
+                                  return Math.min(a, b);
+                              })
+                          ],
+                          "hidden": false,
                         });
+                      } else {
+                        attributes.push(this._createCategoricalAttribute(key, parsedData));
+                      }
                     } else {
                         var isBoolean = !parsedData[key].some(isNaN);
 
@@ -1535,14 +1552,7 @@
                                 "hidden": false,
                             });
                         } else {
-                            attributes.push({
-                                "name": key,
-                                "type": "category",
-                                "values": _.filter(_.uniq(parsedData[key]), (o) => {
-                                    return !(o === undefined)
-                                }),
-                                "hidden": false,
-                            });
+                            attributes.push(this._createCategoricalAttribute(key, parsedData));
                         }
                     }
                 });
