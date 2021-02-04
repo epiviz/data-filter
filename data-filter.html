@@ -421,16 +421,16 @@
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
                     Selection 11 [[selectionUnit.unit]]
                     <paper-range-slider
-		      main-div-style="{ 'display': 'inline'}"
-		      id="sperc" class="sItem autoItem"
-		      single-slider
-		      always-show-pin
-		      name="selection 13 [[selectionUnit.unit]]"
-		      label="selection 12 [[selectionUnit.unit]]"
-		      min=[[selectionUnit.min]]
-		      max=[[selectionUnit.max]]
-		      value-max=[[selectionUnit.value]]
-		      ></paper-range-slider>
+                        main-div-style="{ 'display': 'inline'}"
+                        id="sperc" class="sItem autoItem"
+                        single-slider
+                        always-show-pin
+                        name="selection [[selectionUnit.unit]]"
+                        label="selection [[selectionUnit.unit]]"
+                        min=[[selectionUnit.min]]
+                        max=[[selectionUnit.max]]
+                        value-max=[[selectionUnit.value]]
+                    ></paper-range-slider>
                 </iron-label>
                 <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
@@ -648,7 +648,7 @@
                     tableData: {
                         type: Array,
                         notify: true,
-			            observer: "_tableDataObserver"
+                        observer: "_tableDataObserver"
                     },
 
                     /**
@@ -855,7 +855,7 @@
 
             _clearSelected(event) {
                 this._selected = {};
-		        this._updateUnits();
+                this._updateUnits();
             }
 
             _getSelectItemAsArray(_selected) {
@@ -908,7 +908,7 @@
                 }
 
                 this.selectedItems = sitems;
-		        // this._updateUnits();
+                // this._updateUnits();
             }
 
             _getCardIterator(tableData, _selected) {
@@ -1072,19 +1072,19 @@
              */
             _sModeChanged(e) {
                 switch(e.target.value) {
-                case "Random #":
-                case "Top #":
-		            this._updateUnits(e.target.value);
-                    break;
-                case "Random %":
-                case "Top %":
-                default:
-                    this.selectionUnit = {
-                        min: 0,
-                        max: 100,
-                        value: 100,
-                        unit: '%',
-                    };
+                    case "Random #":
+                    case "Top #":
+                        this._updateUnits(e.target.value);
+                        break;
+                    case "Random %":
+                    case "Top %":
+                    default:
+                        this.selectionUnit = {
+                            min: 0,
+                            max: 100,
+                            value: 100,
+                            unit: '%',
+                        };
                 }
             }
             /**
@@ -1285,24 +1285,24 @@
             applySelection(e) {
                 var self = this;
                 var selectionType = this.$.smode.value;
-                var seceltionValue = this.$.sperc.valueMax;
-                console.log('valueMax', seceltionValue)
+                var selectionValue = this.$.sperc.valueMax;
+                console.log('valueMax', selectionValue)
                 console.log('selectionType', selectionType)
                 console.log('units', this.selectionUnit);
                 // self._selected = {};
 
                 // self.$.selector.clearSelection();
-                var data = _.range(self.tableData.length);
+                var data = this._getCardIterator(this.tableData, this._selected);
                 var count;
                 switch(selectionType) {
                     case "Random #":
                     case "Top #":
-                        count = seceltionValue;
+                        count = selectionValue;
                         break;
                     case "Random %":
                     case "Top %":
                     default:
-                        count = Math.round((data.length * seceltionValue) / 100);
+                        count = Math.round((data.length * selectionValue) / 100);
                 }
                 
 
@@ -1311,16 +1311,16 @@
                     elem.checked = false;
                 });
 
-                if (seceltionValue === 100 || self.tableData <= count) {
+                if (selectionValue === 100 || self.tableData <= count) {
                     // self._selectAll();
                     self._cardSelectAll();
                     return;
                 }
-                
+
                 switch (selectionType) {
                     case 'Random %':
                     case 'Random #':
-                        var randomSamples = _.sampleSize(self.tableData, count);
+                        var randomSamples = _.sampleSize(data, count);
                         // self._selected = randomSamples;
                         _.each(randomSamples, function(rs) {
                             // var relem = data[rs];
@@ -1335,7 +1335,7 @@
                         break;
                     case 'Top #':
                     case 'Top %':
-                        _.each(_.slice(self.tableData, 0, count), function (rs) {
+                        _.each(_.slice(data, 0, count), function (rs) {
                             self._selected[rs.id] = rs;
                         });
                         break;
@@ -1547,8 +1547,11 @@
                           "hidden": false,
                         });
                       } else {
-                        attributes.push(this._createCategoricalAttribute(key, parsedData));
-                      }
+                        var tattr = this._createCategoricalAttribute(key, parsedData);
+                            if (tattr.values.length > 1) {
+                                attributes.push(tattr)
+                            }                      
+                        }
                     } else {
                         var isBoolean = !parsedData[key].some(isNaN);
 
@@ -1560,7 +1563,10 @@
                                 "hidden": false,
                             });
                         } else {
-                            attributes.push(this._createCategoricalAttribute(key, parsedData));
+                            var tattr = this._createCategoricalAttribute(key, parsedData);
+                            if (tattr.values.length > 1) {
+                                attributes.push(tattr)
+                            }
                         }
                     }
                 });
