@@ -419,18 +419,24 @@
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
-                    Selection 11 [[selectionUnit.unit]]
+                    Selection [[selectionUnit.unit]]
+                    [[_showCardSelectAll(_selected.*, tableData.*)]]BB
+                    [[!_showCardSelectAll(_selected.*, tableData.*)]]AA
+                    [[!_showCardSelectAll(_selected.*, tableData.*)]]CC
                     <paper-range-slider
-		      main-div-style="{ 'display': 'inline'}"
-		      id="sperc" class="sItem autoItem"
-		      single-slider
-		      always-show-pin
-		      name="selection 13 [[selectionUnit.unit]]"
-		      label="selection 12 [[selectionUnit.unit]]"
-		      min=[[selectionUnit.min]]
-		      max=[[selectionUnit.max]]
-		      value-max=[[selectionUnit.value]]
-		      ></paper-range-slider>
+                        disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
+                        ignore-bar-touch
+                        editable=false
+                        main-div-style="{ 'display': 'inline'}"
+                        id="sperc" class="sItem autoItem"
+                        single-slider="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
+                        always-show-pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
+                        name="selection [[selectionUnit.unit]]"
+                        label="selection [[selectionUnit.unit]]"
+                        min=[[selectionUnit.min]]
+                        max=[[selectionUnit.max]]
+                        value-max=[[selectionUnit.value]]
+                    ></paper-range-slider>
                 </iron-label>
                 <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
