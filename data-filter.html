@@ -419,12 +419,18 @@
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
-                    Selection 11 [[selectionUnit.unit]]
+                    Selection [[selectionUnit.unit]]
+                    [[_showCardSelectAll(_selected.*, tableData.*)]]BB
+                    [[!_showCardSelectAll(_selected.*, tableData.*)]]AA
+                    [[!_showCardSelectAll(_selected.*, tableData.*)]]CC
                     <paper-range-slider
+                        disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
+                        ignore-bar-touch
+                        editable=false
                         main-div-style="{ 'display': 'inline'}"
                         id="sperc" class="sItem autoItem"
-                        single-slider
-                        always-show-pin
+                        single-slider="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
+                        always-show-pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
                         name="selection [[selectionUnit.unit]]"
                         label="selection [[selectionUnit.unit]]"
                         min=[[selectionUnit.min]]
