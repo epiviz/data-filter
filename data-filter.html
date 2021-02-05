@@ -404,13 +404,13 @@
                         </template>
                     </paper-listbox>
                 </paper-dropdown-menu>
-                <paper-dropdown-menu class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
+                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
                     <paper-listbox slot="dropdown-content" selected="1">
                         <paper-item>Auto</paper-item>
                         <paper-item>Manual</paper-item>
                     </paper-listbox>
                 </paper-dropdown-menu>
-                <paper-dropdown-menu id="smode" class="sItem autoItem" on-value-changed="_sModeChanged" label="select ">
+                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" id="smode" class="sItem autoItem" on-value-changed="_sModeChanged" label="select ">
                     <paper-listbox slot="dropdown-content" selected="0">
                         <paper-item>Random %</paper-item>
                         <paper-item>Random #</paper-item>
@@ -420,25 +420,20 @@
                 </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
                     Selection [[selectionUnit.unit]]
-                    [[_showCardSelectAll(_selected.*, tableData.*)]]BB
-                    [[!_showCardSelectAll(_selected.*, tableData.*)]]AA
-                    [[!_showCardSelectAll(_selected.*, tableData.*)]]CC
-                    <paper-range-slider
+                    <paper-single-range-slider
+                    active
                         disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
-                        ignore-bar-touch
-                        editable=false
                         main-div-style="{ 'display': 'inline'}"
                         id="sperc" class="sItem autoItem"
-                        single-slider="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
-                        always-show-pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
+                        pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
                         name="selection [[selectionUnit.unit]]"
                         label="selection [[selectionUnit.unit]]"
                         min=[[selectionUnit.min]]
                         max=[[selectionUnit.max]]
-                        value-max=[[selectionUnit.value]]
-                    ></paper-range-slider>
+                        value=[[selectionUnit.value]]
+                    ></paper-single-range-slider>
                 </iron-label>
-                <paper-button class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
+                <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
 
                     <div id="tableContainer">
@@ -803,7 +798,6 @@
             }
 
             _showTable(layoutCard) {
-                console.log("_showTable");
                 if (layoutCard) {
                     return true;
                 }
@@ -943,8 +937,7 @@
 
                 delete this._selected[item];
                 this.notifyPath("_selected", this._selected);
-                // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', false);
-                // this.shadowRoot.querySelector("#cardRepeater").render();
+                this._updateUnits();//update selector value
 
             }
 
@@ -1252,8 +1245,6 @@
             }
 
             _updateUnits(newUnit) {
-                // console.log("update units", this.tableData, Object.keys(this._selected));
-                
                 if(!this.tableData || !this.tableData.length) {
                     return;
                 }
@@ -1264,7 +1255,6 @@
                     case "Top #":
                     case "Random #":
                         const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
-                        console.log(' reminds units', remindItemsLength);
                         this.selectionUnit = {
                                 min: 0,
                                 max: remindItemsLength,
@@ -1291,10 +1281,7 @@
             applySelection(e) {
                 var self = this;
                 var selectionType = this.$.smode.value;
-                var selectionValue = this.$.sperc.valueMax;
-                console.log('valueMax', selectionValue)
-                console.log('selectionType', selectionType)
-                console.log('units', this.selectionUnit);
+                var selectionValue = this.$.sperc.value;
                 // self._selected = {};
 
                 // self.$.selector.clearSelection();
@@ -1322,7 +1309,6 @@
                     self._cardSelectAll();
                     return;
                 }
-
                 switch (selectionType) {
                     case 'Random %':
                     case 'Random #':
@@ -1475,7 +1461,6 @@
              */
             _searchChanged(newVal, oldVal) {
                 var self = this;
-                console.log('filtering')
                 this._attributes.forEach((item, index) => {
                     if (newVal === '' || this._getSanitizeItemName(item.name).toLowerCase().indexOf(newVal.toLowerCase()) !== -1) {
                         self.set("_attributes." + index + ".hidden", false);
