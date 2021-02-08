@@ -26,7 +26,7 @@
     "iron-list": "^2.0.11",
     "iron-dropdown": "^2.2.0",
     "lodash": "^4.0.0",
-    "paper-range-slider": "IftachSadeh/paper-range-slider#1.0.3",
+    "paper-range-slider": "https://github.com/jkanche/paper-range-slider.git#master",
     "paper-button": "^2.1.1",
     "iron-collapse": "^2.2.1",
     "paper-collapse-item": "2.3.1",
