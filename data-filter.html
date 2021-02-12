@@ -829,6 +829,9 @@
             }
 
             _showCardSelectAll(_selected, tableData) {
+                if (this.tableData && this.tableData.length === 0) {
+                    return true;
+                }
                 if (this.tableData && this._selected && Object.keys(this._selected).length == this.tableData.length) {
                     return true;
                 }
