@@ -36,6 +36,13 @@
                 height: 100%;
                 --selection-visibility: hidden;
             }
+            .filterButtonsContainer {
+              position: absolute;
+              bottom: 5px;
+              background: #ffffff;
+              z-index: 1;
+              /* outline: solid; */
+            }
 
             table.gridtable {
                 height: 100%;
@@ -373,8 +380,10 @@
                         </template>
                     </template>
                 </div>
-                <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
-                <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button>
+                <div class="filterButtonsContainer">
+                  <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
+                  <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button>
+                </div>
             </div>
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
