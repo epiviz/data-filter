@@ -421,6 +421,14 @@
                         <paper-item>Top #</paper-item>
                     </paper-listbox>
                 </paper-dropdown-menu>
+                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem" 
+                  on-value-changed="_sContainerChanged" label="Groupe by">
+                  <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
+                    <template is="dom-repeat" items="[[_getGroupedByAttr(_attributes)]]" mutable-data>
+                      <paper-item value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
+                    </template>
+                  </paper-listbox>
+                </paper-dropdown-menu>
                 <iron-label id="percentSelection" class="category-headers sItem autoItem">
                     Selection [[selectionUnit.unit]]
                     <paper-single-range-slider
@@ -699,7 +707,14 @@
                     _attributes: {
                         type: Array,
                         value: [],
-                        notify: true
+                        notify: true,
+                        observer: "_attributesChanged"
+                    },
+
+                    _groupedBy: {
+                      type: Number,
+                      value: -1,
+                      observer: "_groupedByChanged"
                     },
 
                     /**
@@ -778,6 +793,18 @@
                 });
 
                 this.set("filterStringArray", filterString);
+            }
+
+            _groupedByChanged(newVal, oldVal) {
+              console.log('grouped new/old', newVal, oldVal);
+            }
+
+            _attributesChanged(newVal, oldVal) {
+              this.set('_groupedBy', -1);
+            }
+
+            _getGroupedByAttr(attr) {
+              return attr;//todo use attr directly
             }
 
             _getItemValue(item) {
@@ -1298,6 +1325,8 @@
 
                 // self.$.selector.clearSelection();
                 var data = this._getCardIterator(this.tableData, this._selected);
+
+
                 var count;
                 switch(selectionType) {
                     case "Random #":
@@ -1321,6 +1350,27 @@
                     self._cardSelectAll();
                     return;
                 }
+                const groupedByAnnotation = {};
+                const annotationType = this._attributes[this._groupedBy];
+
+                if (annotationType) {
+                  data.reduce((acc, attr) => {
+                    //info: if data is incorect
+                    if (!attr[annotationType.name]) {
+                      if(!acc["_ungrouped"]) {
+                        acc["_ungrouped"] = [];
+                      }
+                      acc["_ungrouped"].push(attr);
+                    } else {
+                      if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
+                        acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
+                      }
+                      acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
+                    }
+                    return acc;
+                  }, groupedByAnnotation);
+                }
+                
                 switch (selectionType) {
                     case 'Random %':
                     case 'Random #':
@@ -1339,7 +1389,12 @@
                         break;
                     case 'Top #':
                     case 'Top %':
-                        _.each(_.slice(data, 0, count), function (rs) {
+                        const selected = this._selectGrouped(Object.values(groupedByAnnotation), it => {
+                          // debugger;
+                          return _.slice(it, 0, count)
+                        });
+                        _.each(selected, function(rs) {
+                            // var relem = data[rs];
                             self._selected[rs.id] = rs;
                         });
                         break;
@@ -1347,6 +1402,14 @@
 
                 self._updateUnits();
                 self.notifyPath("_selected");
+            }
+
+            _selectGrouped(data, fn) {
+              let ret = [];
+              data.forEach((it) => {
+                ret = ret.concat(fn(it));
+              });
+              return ret;
             }
 
             /**
