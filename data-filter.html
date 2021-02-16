@@ -421,8 +421,8 @@
                         <paper-item>Top #</paper-item>
                     </paper-listbox>
                 </paper-dropdown-menu>
-                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem" 
-                  on-value-changed="_sContainerChanged" label="Groupe by">
+                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
+                  class="sItem autoItem" label="Groupe by">
                   <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
                     <template is="dom-repeat" items="[[_getGroupedByAttr(_attributes)]]" mutable-data>
                       <paper-item value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
