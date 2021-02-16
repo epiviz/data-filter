@@ -424,7 +424,7 @@
                 <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
                   class="sItem autoItem" label="Groupe by">
                   <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
-                    <template is="dom-repeat" items="[[_getGroupedByAttr(_attributes)]]" mutable-data>
+                    <template is="dom-repeat" items="[[_attributes]]" mutable-data>
                       <paper-item value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
                     </template>
                   </paper-listbox>
@@ -714,7 +714,6 @@
                     _groupedBy: {
                       type: Number,
                       value: -1,
-                      observer: "_groupedByChanged"
                     },
 
                     /**
@@ -795,17 +794,10 @@
                 this.set("filterStringArray", filterString);
             }
 
-            _groupedByChanged(newVal, oldVal) {
-              console.log('grouped new/old', newVal, oldVal);
-            }
-
             _attributesChanged(newVal, oldVal) {
               this.set('_groupedBy', -1);
             }
 
-            _getGroupedByAttr(attr) {
-              return attr;//todo use attr directly
-            }
 
             _getItemValue(item) {
                 return this.filters[item.name];
@@ -1325,8 +1317,6 @@
 
                 // self.$.selector.clearSelection();
                 var data = this._getCardIterator(this.tableData, this._selected);
-
-
                 var count;
                 switch(selectionType) {
                     case "Random #":
@@ -1406,11 +1396,11 @@
             }
 
             _selectGrouped(data, fn) {
-              let ret = [];
+              let selectedGrpoups = [];
               data.forEach((it) => {
-                ret = ret.concat(fn(it));
+                selectedGrpoups = selectedGrpoups.concat(fn(it));
               });
-              return ret;
+              return selectedGrpoups;
             }
 
             /**
