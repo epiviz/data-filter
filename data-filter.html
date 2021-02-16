@@ -1374,10 +1374,10 @@
                 switch (selectionType) {
                     case 'Random %':
                     case 'Random #':
-                        var randomSamples = _.sampleSize(data, count);
-                        // self._selected = randomSamples;
+                      const randomSamples = this._selectGrouped(Object.values(groupedByAnnotation), it => {
+                        return _.sampleSize(it, count);
+                      });
                         _.each(randomSamples, function(rs) {
-                            // var relem = data[rs];
                             self._selected[rs.id] = rs;
                         });
                         // _.each(randomSamples, function (rs) {
@@ -1390,13 +1390,14 @@
                     case 'Top #':
                     case 'Top %':
                         const selected = this._selectGrouped(Object.values(groupedByAnnotation), it => {
-                          // debugger;
                           return _.slice(it, 0, count)
                         });
                         _.each(selected, function(rs) {
-                            // var relem = data[rs];
                             self._selected[rs.id] = rs;
                         });
+                        // _.each(_.slice(data, 0, count), function (rs) {
+                        //     self._selected[rs.id] = rs;
+                        // });
                         break;
                 }
 
