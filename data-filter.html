@@ -422,9 +422,9 @@
                     </paper-listbox>
                 </paper-dropdown-menu>
                 <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
-                  class="sItem autoItem" label="Groupe by">
+                  class="sItem autoItem" label="Group by">
                   <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
-                    <template is="dom-repeat" items="[[_attributes]]" mutable-data>
+                    <template is="dom-repeat" items="[[_getAttributes(_attributes)]]" mutable-data>
                       <paper-item value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
                     </template>
                   </paper-listbox>
@@ -755,6 +755,10 @@
                 this._updateUnits();
             }
 
+            _getAttributes(_attributes) {
+              return _attributes.length ? [ ..._attributes, {name: "no_group"}] : _attributes;
+            }
+
             _filtersChanged(newVal, oldVal) {
                 var self = this;
                 var filterString = [];
@@ -797,7 +801,6 @@
             _attributesChanged(newVal, oldVal) {
               this.set('_groupedBy', -1);
             }
-
 
             _getItemValue(item) {
                 return this.filters[item.name];
@@ -1329,7 +1332,7 @@
                         count = Math.round((data.length * selectionValue) / 100);
                 }
                 
-
+                
                 var elems = self.shadowRoot.querySelectorAll(".row-check");
                 elems.forEach(function (elem) {
                     elem.checked = false;
@@ -1345,20 +1348,14 @@
 
                 if (annotationType) {
                   data.reduce((acc, attr) => {
-                    //info: if data is incorect
-                    if (!attr[annotationType.name]) {
-                      if(!acc["_ungrouped"]) {
-                        acc["_ungrouped"] = [];
-                      }
-                      acc["_ungrouped"].push(attr);
-                    } else {
-                      if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
-                        acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
-                      }
-                      acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
+                    if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
+                      acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
                     }
+                    acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
                     return acc;
                   }, groupedByAnnotation);
+                } else {
+                  groupedByAnnotation['a'] = data;
                 }
                 
                 switch (selectionType) {
