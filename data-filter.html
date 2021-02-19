@@ -114,6 +114,11 @@
                 @apply --paper-input-container-shared-input-style;
             }
 
+            .groupBy:first-child {
+              color: grey;
+              font-weight: 400;
+            }
+
             .flexchild-vertical {
                 @apply --layout-flex;
                 /*border-bottom: 1px solid rgba(34, 36, 38, .15);*/
@@ -425,7 +430,7 @@
                   class="sItem autoItem" label="Group by">
                   <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
                     <template is="dom-repeat" items="[[_getAttributes(_attributes)]]" mutable-data>
-                      <paper-item value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
+                      <paper-item class="groupBy" value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
                     </template>
                   </paper-listbox>
                 </paper-dropdown-menu>
@@ -488,7 +493,7 @@
                             <div style="text-align: center;">All measurement are either selected or choose a different chart or collection</div>
                         </template>
                         <template is="dom-if" if="[[_showCardsMeasurements(tableData.*, _selected.*)]]">
-                            <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+                            <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_availableMeasurements]]" as="item">
                                 <paper-card>
                                     <div class="content-card">
                                         <span class="header-card">[[item.name]]</span><br/>
@@ -659,6 +664,7 @@
                      */
                     tableData: {
                         type: Array,
+                        value: [],
                         notify: true,
                         observer: "_tableDataObserver"
                     },
@@ -710,10 +716,25 @@
                         notify: true,
                         observer: "_attributesChanged"
                     },
-                  
+
+                    _attributesGroupedBy: {
+                        type: Object,
+                        value: {},
+                        notify: true,
+                        observer: "_attributesGroupedByObserver",
+                        computed: "_computeAttributesGroupedBy(_attributes, _groupedBy, _availableMeasurements)"
+                    },
+
+                    _availableMeasurements: {
+                        type: Array,
+                        value: [],
+                        notify: true,
+                        computed: "_getCardIterator(tableData, _selected)"
+                    },
+
                     _groupedBy: {
                       type: Number,
-                      value: -1,
+                      value: 0,
                     },
 
                     /**
@@ -755,8 +776,37 @@
                 this._updateUnits();
             }
 
+            _maxAmountOfMeasurements() {
+              return Math.max(...Object.values(this._attributesGroupedBy).map(it => it.length));
+            }
+
+            _attributesGroupedByObserver(newVal, oldVal) {
+              const max = this._maxAmountOfMeasurements();
+              if (max > 0 && this.selectionUnit.unit === '#') {
+                this.set('selectionUnit.max', max);
+                this.notifyPath('selectionUnit.max');
+              }
+            }
+
+            _computeAttributesGroupedBy(_attributes, _groupedBy, data) {
+              const groupedByAnnotation = {};
+                if (this._groupedBy !== 0) {
+                  const annotationType = this._attributes[this._groupedBy - 1];
+                  data.reduce((acc, attr) => {
+                    if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
+                      acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
+                    }
+                    acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
+                    return acc;
+                  }, groupedByAnnotation);
+                } else {
+                  groupedByAnnotation['a'] = data;
+                }
+              return groupedByAnnotation;
+            }
+
             _getAttributes(_attributes) {
-              return _attributes.length ? [ ..._attributes, {name: "no_group"}] : _attributes;
+              return _attributes.length ? [ {name: "no grouping"}, ..._attributes] : _attributes;
             }
 
             _filtersChanged(newVal, oldVal) {
@@ -799,7 +849,7 @@
             }
 
             _attributesChanged(newVal, oldVal) {
-              this.set('_groupedBy', -1);
+              this.set('_groupedBy', 0);
             }
 
             _getItemValue(item) {
@@ -840,10 +890,7 @@
             }
 
             _showCardsMeasurements(tableData, _selected) {
-                var self = this;
-                var data = self._getCardIterator();
-
-                if (data.length > 0) {
+                if (this._availableMeasurements.length > 0) {
                     return true;
                 }
 
@@ -947,6 +994,9 @@
 
             _getCardIterator(tableData, _selected) {
                 var self = this, ddata = [];
+                if (!tableData) {
+                  return ddata;
+                }
                 this.tableData.forEach(function(m) {
                     if (!Object.keys(self._selected).includes(m.id)) {
                         ddata.push(m);
@@ -1318,8 +1368,7 @@
                 var selectionValue = this.$.sperc.value;
                 // self._selected = {};
 
-                // self.$.selector.clearSelection();
-                var data = this._getCardIterator(this.tableData, this._selected);
+                var data = this._availableMeasurements;
                 var count;
                 switch(selectionType) {
                     case "Random #":
@@ -1331,8 +1380,7 @@
                     default:
                         count = Math.round((data.length * selectionValue) / 100);
                 }
-                
-                
+
                 var elems = self.shadowRoot.querySelectorAll(".row-check");
                 elems.forEach(function (elem) {
                     elem.checked = false;
@@ -1343,25 +1391,11 @@
                     self._cardSelectAll();
                     return;
                 }
-                const groupedByAnnotation = {};
-                const annotationType = this._attributes[this._groupedBy];
-
-                if (annotationType) {
-                  data.reduce((acc, attr) => {
-                    if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
-                      acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
-                    }
-                    acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
-                    return acc;
-                  }, groupedByAnnotation);
-                } else {
-                  groupedByAnnotation['a'] = data;
-                }
                 
                 switch (selectionType) {
                     case 'Random %':
                     case 'Random #':
-                      const randomSamples = this._selectGrouped(Object.values(groupedByAnnotation), it => {
+                      const randomSamples = this._selectGrouped(Object.values(this._attributesGroupedBy), it => {
                         return _.sampleSize(it, count);
                       });
                         _.each(randomSamples, function(rs) {
