@@ -429,7 +429,7 @@
                 <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
                   class="sItem autoItem" label="Group by">
                   <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
-                    <template is="dom-repeat" items="[[_getAttributes(_attributes)]]" mutable-data>
+                    <template is="dom-repeat" items="[[_attributesForGrouping]]" mutable-data>
                       <paper-item class="groupBy" value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
                     </template>
                   </paper-listbox>
@@ -717,12 +717,19 @@
                         observer: "_attributesChanged"
                     },
 
+                    _attributesForGrouping: {
+                      type: Array,
+                      value: [],
+                      notify: true,
+                      computed: "_getAttributesForGrouping(_attributes)"
+                    },
+
                     _attributesGroupedBy: {
                         type: Object,
                         value: {},
                         notify: true,
                         observer: "_attributesGroupedByObserver",
-                        computed: "_computeAttributesGroupedBy(_attributes, _groupedBy, _availableMeasurements)"
+                        computed: "_computeAttributesGroupedBy(_attributesForGrouping, _groupedBy, _availableMeasurements)"
                     },
 
                     _availableMeasurements: {
@@ -772,6 +779,17 @@
                 // this._selected = {};
             }
 
+            _getAttributesForGrouping(_attributes){
+              const filteredAttributes = this._attributes.filter(it => {
+                if (it.name === 'name') {
+                  return false;
+                }
+                if (it.type === 'category')
+                return it.name;
+              })
+              return filteredAttributes.length ? [ {name: "no grouping"}, ...filteredAttributes] : filteredAttributes;
+            }
+
             _tableDataObserver(newVal, oldVal) {
                 this._updateUnits();
             }
@@ -791,7 +809,7 @@
             _computeAttributesGroupedBy(_attributes, _groupedBy, data) {
               const groupedByAnnotation = {};
                 if (this._groupedBy !== 0) {
-                  const annotationType = this._attributes[this._groupedBy - 1];
+                  const annotationType = _attributes[this._groupedBy];
                   data.reduce((acc, attr) => {
                     if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
                       acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
@@ -803,17 +821,6 @@
                   groupedByAnnotation['a'] = data;
                 }
               return groupedByAnnotation;
-            }
-
-            _getAttributes(_attributes) {
-              const filteredAttributes = this._attributes.filter(it => {
-                if (it.name === 'name') {
-                  return false;
-                }
-                if (it.type === 'category')
-                return it.name;
-              })
-              return filteredAttributes.length ? [ {name: "no grouping"}, ...filteredAttributes] : filteredAttributes;
             }
 
             _filtersChanged(newVal, oldVal) {
