@@ -806,7 +806,14 @@
             }
 
             _getAttributes(_attributes) {
-              return _attributes.length ? [ {name: "no grouping"}, ..._attributes] : _attributes;
+              const filteredAttributes = this._attributes.filter(it => {
+                if (it.name === 'name') {
+                  return false;
+                }
+                if (it.type === 'category')
+                return it.name;
+              })
+              return filteredAttributes.length ? [ {name: "no grouping"}, ...filteredAttributes] : filteredAttributes;
             }
 
             _filtersChanged(newVal, oldVal) {
