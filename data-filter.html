@@ -781,13 +781,12 @@
 
             _getAttributesForGrouping(_attributes){
               const filteredAttributes = this._attributes.filter(it => {
-                if (it.name === 'name') {
+                if (it.name === 'name' || it.type !== 'category') {
                   return false;
                 }
-                if (it.type === 'category')
                 return it.name;
               })
-              return filteredAttributes.length ? [ {name: "no grouping"}, ...filteredAttributes] : filteredAttributes;
+              return filteredAttributes.length ? [ {name: "no grouping"}, ...filteredAttributes] : [{name: "no grouping"}];
             }
 
             _tableDataObserver(newVal, oldVal) {
