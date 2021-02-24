@@ -1006,6 +1006,7 @@
             }
 
             _getCardIterator(tableData, _selected) {
+              console.log('_getCardIterator',tableData)
                 var self = this, ddata = [];
                 if (!tableData) {
                   return ddata;
@@ -1509,7 +1510,7 @@
 
             /**
              * Deselect all rows in the table.
-             */
+             */ 
             _deselectAll() {
                 // this.$.selector.clearSelection();
                 // var elems = this.shadowRoot.querySelectorAll(".row-check");
@@ -1523,7 +1524,8 @@
              */
             _dataChanged(newData, oldData) {
                 var self = this;
-
+                
+                this.set("_groupedBy", 0);
                 var data = self.data;
 
                 // self._selected = {};
