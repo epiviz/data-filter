@@ -1351,7 +1351,7 @@
                     case "#":
                     case "Top #":
                     case "Random #":
-                        const remindItemsLength = this._getCardIterator(this.tableData, this._selected).length || 0;
+                        const remindItemsLength = this._maxAmountOfMeasurements(this._attributesGroupedBy);
                         this.selectionUnit = {
                                 min: 0,
                                 max: remindItemsLength,
@@ -1423,7 +1423,7 @@
                         break;
                     case 'Top #':
                     case 'Top %':
-                        const selected = this._selectGrouped(Object.values(groupedByAnnotation), it => {
+                        const selected = this._selectGrouped(Object.values(this._attributesGroupedBy), it => {
                           return _.slice(it, 0, count)
                         });
                         _.each(selected, function(rs) {
