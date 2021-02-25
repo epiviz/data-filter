@@ -913,14 +913,15 @@
             _showCardSelectAll(_selected, tableData) {
 
                 if (this.tableData) {
-                    var cm = this._getCardIterator(this.tableData, this._selected);
+                    var cm = this._availableMeasurements;
 
                     if (cm.length == 0) {
                         return true;
                     }
                 }
 
-                if (this.tableData && this._selected && Object.keys(this._selected).length == this.tableData.length) {
+                if (this.tableData && this._selected 
+                    && Object.keys(this._selected).length == this.tableData.length) {
                     return true;
                 }
 
@@ -987,7 +988,6 @@
             }
 
             _ToggleTruncate(e) {
-                console.log(e.target);
                 e.target.classList.toggle("truncate-text");
             }
 
@@ -1006,7 +1006,6 @@
             }
 
             _getCardIterator(tableData, _selected) {
-              console.log('_getCardIterator',tableData)
                 var self = this, ddata = [];
                 if (!tableData) {
                   return ddata;
