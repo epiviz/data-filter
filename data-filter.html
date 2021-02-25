@@ -335,7 +335,7 @@
         </style>
         <div class="container">
             <div id="filterContainer">
-              <h3 style="text-align: center;">Filter Container</h3>
+              <h3 style="text-align: center;">Filter Selections by</h3>
                 <div id="searchbox">
                     <paper-input value="{{filterSearch}}" label="annotation" no-label-float>
                         <paper-icon-button icon="search" role="button" slot="prefix"></paper-icon-button>
@@ -380,7 +380,7 @@
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
           <div>
-            <h3 style="text-align: center;">Selection Container</h3>
+            <h3 style="text-align: center;">Add Measurements to Selection</h3>
             <div id="selectionContainer">
                 <div id="filtersList">
                     <template is="dom-repeat" items="{{_filterCategories(filterStringArray.*, filters.*)}}" as="category" mutable-data>
