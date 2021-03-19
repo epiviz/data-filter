@@ -1293,7 +1293,7 @@
                     this.filters[key].forEach(function (val, index) {
                         if (val !== "Any") {
                             if (typeof (val) === "string") {
-                                categoryFilters.push("item['" + key + "'] == '" + val + "'");
+                                categoryFilters.push('item["' + key + '"] == "' + val + '"');
                             } else if (typeof (val) === "number") {
                                 if (index == 0) {
                                     categoryFilters.push("item['" + key + "'] >= " + val);
