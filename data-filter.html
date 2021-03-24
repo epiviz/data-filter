@@ -124,14 +124,30 @@
                 /*border-bottom: 1px solid rgba(34, 36, 38, .15);*/
                 padding: 10px;
             }
-            .pagination {
 
+            .pagination {
+              display: flex;
+              max-width: 300px;
             }
+
             .pagination > * {
               cursor: pointer;
+              border: solid 1px #eee;
+              border-left: 0px;
+              width: 30px;
+              text-align: center;
+              line-height: 30px;
+              box-sizing: border-box;
+              height: 30px;
             }
+
+            .pagination > *:first-child{
+              border: solid 1px #eee;
+            }
+
             .pagination > *[active] {
-              color: red;
+              color: #fff;
+              background-color: #4285f4;
             }
 
             .table-headers {
@@ -461,9 +477,16 @@
                 <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
                 <template is="dom-if" if="pagination">
                   <div class="pagination">
+                    <div on-click="_decrementPage">
+                      <iron-icon icon="icons:chevron-left"></iron-icon>
+                    </div>
                     <template is="dom-repeat" items="[[pages]]" as="page">
-                      <div active$="[[page.active]]" value="[[page.number]]" on-click="_updatePagination">[[page.title]]</div>
+                      <div active$="[[page.active]]" value="[[page.number]]" 
+                      on-click="_updatePagination">[[page.title]]</div>
                     </template>
+                    <div on-click="_incrementPage">
+                      <iron-icon icon="icons:chevron-right"></iron-icon>
+                    </div>
                   </div>
                   <div>[[pagination.page]] pagiantion [[pagination.total_records]]::[[pagination.limit]]</div>
                 </template>
@@ -818,8 +841,28 @@
                   pages[i] = {number: i, title: i+1, active: (page === i)};
                 }
                 console.log('pages: ', pages_amount, total_records, limit, pages);
+
               }
               return pages;
+            }
+
+            _decrementPage() {
+              const {page} = this.pagination;
+              if (page > 0) {
+                this.set('pagination', {...this.pagination,
+                  page: page - 1,
+                });
+              }
+            }
+
+            _incrementPage() {
+              const {total_records, limit, page} = this.pagination;
+              const pagesAmount = Math.ceil(total_records/limit);
+              if (page < pagesAmount - 1) {
+                this.set('pagination', {...this.pagination,
+                  page: page + 1,
+                });
+              }
             }
 
             _updatePagination(e) {
