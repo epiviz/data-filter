@@ -124,6 +124,15 @@
                 /*border-bottom: 1px solid rgba(34, 36, 38, .15);*/
                 padding: 10px;
             }
+            .pagination {
+
+            }
+            .pagination > * {
+              cursor: pointer;
+            }
+            .pagination > *[active] {
+              color: red;
+            }
 
             .table-headers {
                 font-weight: bold;
@@ -450,6 +459,14 @@
                     ></paper-single-range-slider>
                 </iron-label>
                 <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
+                <template is="dom-if" if="pagination">
+                  <div class="pagination">
+                    <template is="dom-repeat" items="[[pages]]" as="page">
+                      <div active$="[[page.active]]" value="[[page.number]]" on-click="_updatePagination">[[page.title]]</div>
+                    </template>
+                  </div>
+                  <div>[[pagination.page]] pagiantion [[pagination.total_records]]::[[pagination.limit]]</div>
+                </template>
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
 
                     <div id="tableContainer">
@@ -619,6 +636,17 @@
                         value: {},
                         observer: "_filtersChanged"
                     },
+                    pagination: {
+                      type: Object,
+                      notify: true,
+                      Observer: "_paginationChanged"
+                    },
+
+                    pages: {
+                      type: Array,
+                      computed: "_calculatePages(pagination)"
+                    },
+
                     /** 
                      * definition of units used in selection
                      */
@@ -777,6 +805,32 @@
             connectedCallback() {
                 super.connectedCallback();
                 // this._selected = {};
+            }
+
+            _calculatePages(pagination) {
+              let pages = [];
+              if (pagination !== undefined) {
+                const {total_records, limit, page} = pagination;
+                const pages_amount = Math.ceil(total_records/limit);
+                // todo: add ... interval
+                const pages_limit = pages_amount > 4 ? 4: pages_amount;
+                for(let i=0;i<pages_limit;i++) {
+                  pages[i] = {number: i, title: i+1, active: (page === i)};
+                }
+                console.log('pages: ', pages_amount, total_records, limit, pages);
+              }
+              return pages;
+            }
+
+            _updatePagination(e) {
+
+              this.set('pagination', {...this.pagination,
+                page: +e.target.value
+              });
+
+            }
+            _paginationChanged(newVal, oldVal) {
+              
             }
 
             _getAttributesForGrouping(_attributes){
