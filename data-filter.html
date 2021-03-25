@@ -512,7 +512,7 @@
                 </template>
                 <template is="dom-if" if="pagination">
                     <div class="filterInput">
-                      <input placeholder="search query" \>
+                      <input value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler" placeholder="search for measurements" \>
                   </div>
                 </template>
                 
@@ -690,7 +690,13 @@
                     pagination: {
                       type: Object,
                       notify: true,
-                      Observer: "_paginationChanged"
+                      // Observer: "_paginationChanged"
+                    },
+
+                    measurementsSearch: {
+                      type: String,
+                      notify: true,
+                      Observer: "_measurementsSearchChanged"
                     },
 
                     pages: {
@@ -894,14 +900,21 @@
             }
 
             _updatePagination(e) {
-
               this.set('pagination', {...this.pagination,
                 page: +e.target.value
               });
-
             }
-            _paginationChanged(newVal, oldVal) {
-              
+
+            _measurementsSearchHandler(e) {
+              console.log('.target.value', e.target.value, this.measurementsSearch);
+
+              const val = e.target.value;
+              this._debouncer = Polymer.Debouncer.debounce(
+                this._debouncer,
+                Polymer.Async.timeOut.after(450),
+                () => {
+                  this.set('measurementsSearch', val)
+                });
             }
 
             _getAttributesForGrouping(_attributes){
