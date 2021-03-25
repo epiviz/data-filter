@@ -127,7 +127,11 @@
 
             .pagination {
               display: flex;
-              max-width: 300px;
+              grid-row: 3;
+              grid-column: 1;
+              grid-column-end: span 2;
+              justify-self: flex-start;
+              align-self: center;
             }
 
             .pagination > * {
@@ -135,6 +139,7 @@
               border: solid 1px #eee;
               border-left: 0px;
               width: 30px;
+              min-width: 30px;
               text-align: center;
               line-height: 30px;
               box-sizing: border-box;
@@ -148,6 +153,17 @@
             .pagination > *[active] {
               color: #fff;
               background-color: #4285f4;
+            }
+
+            .filterInput {
+              grid-row: 3;
+              grid-column: 3;
+              justify-self: flex-start;
+              align-self: center;
+            }
+
+            .filterInput > input {
+              height: 20px;
             }
 
             .table-headers {
@@ -202,7 +218,7 @@
             #selectionContainer {
                 padding: 0 10px;
                 display: grid;
-                grid-template-rows: auto 50px 25px 100%;
+                grid-template-rows: auto 50px 50px 100%;
                 grid-template-columns: repeat(6, minmax(50px, 1fr));
                 grid-column-gap: 15px;
                 grid-column: 2;
@@ -343,6 +359,8 @@
                 height: 25px;
                 margin-bottom: 1px;
                 padding-bottom: 1px;
+                justify-self: flex-end;
+                align-self: center;
                 white-space: nowrap;
             }
 
@@ -429,6 +447,8 @@
                         </template>
                     </paper-listbox>
                 </paper-menu-button> -->
+                
+
                 <paper-dropdown-menu name="sortColumn" class="sItem" label="Sort" value="{{sortCardColumn}}" no-animations
                 horizontal-align="left">
                     <paper-listbox slot="dropdown-content">
@@ -475,6 +495,7 @@
                     ></paper-single-range-slider>
                 </iron-label>
                 <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
+
                 <template is="dom-if" if="pagination">
                   <div class="pagination">
                     <div on-click="_decrementPage">
@@ -488,8 +509,17 @@
                       <iron-icon icon="icons:chevron-right"></iron-icon>
                     </div>
                   </div>
-                  <div>[[pagination.page]] pagiantion [[pagination.total_records]]::[[pagination.limit]]</div>
                 </template>
+                <template is="dom-if" if="pagination">
+                    <div class="filterInput">
+                      <input placeholder="search query" \>
+                  </div>
+                </template>
+                
+                <div class="cardselectall">
+                  <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" on-click="_cardSelectAll" raised>select All </paper-button>
+                </div>
+              <!-- </div> -->
                 <template is="dom-if" if="[[_showTable(layoutCard)]]">
 
                     <div id="tableContainer">
@@ -524,9 +554,7 @@
                         </table>
                     </div>
                 </template>
-                <div class="cardselectall">
-                    <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" on-click="_cardSelectAll" raised>select All </paper-button>
-                </div>
+   
                 <template is="dom-if" if="[[!_showTable(layoutCard)]]">
                     <div id="cardContainer">
                         <template is="dom-if" if="[[!_showCardsMeasurements(tableData.*, _selected.*)]]">
