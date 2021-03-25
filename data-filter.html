@@ -496,7 +496,7 @@
                 </iron-label>
                 <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
 
-                <template is="dom-if" if="pagination">
+                <template is="dom-if" if="[[_showPagination(pagination)]]">
                   <div class="pagination">
                     <div on-click="_decrementPage">
                       <iron-icon icon="icons:chevron-left"></iron-icon>
@@ -510,11 +510,9 @@
                     </div>
                   </div>
                 </template>
-                <template is="dom-if" if="pagination">
-                    <div class="filterInput">
-                      <input value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler" placeholder="search for measurements" \>
-                  </div>
-                </template>
+                <div class="filterInput">
+                  <input value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler" placeholder="search for measurements" \>
+                </div>
                 
                 <div class="cardselectall">
                   <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" on-click="_cardSelectAll" raised>select All </paper-button>
@@ -878,6 +876,10 @@
 
               }
               return pages;
+            }
+            _showPagination(pagination) {
+              console.log('show pagination', pagination.total_records, pagination.limit)
+              return pagination.total_records > pagination.limit;
             }
 
             _decrementPage() {
