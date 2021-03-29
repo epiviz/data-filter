@@ -872,13 +872,10 @@
                 for(let i=0;i<pages_limit;i++) {
                   pages[i] = {number: i, title: i+1, active: (page === i)};
                 }
-                console.log('pages: ', pages_amount, total_records, limit, pages);
-
               }
               return pages;
             }
             _showPagination(pagination) {
-              console.log('show pagination', pagination.total_records, pagination.limit)
               return pagination.total_records > pagination.limit;
             }
 
@@ -908,7 +905,6 @@
             }
 
             _measurementsSearchHandler(e) {
-              console.log('.target.value', e.target.value, this.measurementsSearch);
 
               const val = e.target.value;
               this._debouncer = Polymer.Debouncer.debounce(
