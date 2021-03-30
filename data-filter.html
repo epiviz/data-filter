@@ -157,14 +157,14 @@
 
             .filterInput {
               grid-row: 3;
-              grid-column: 3;
+              grid-column: 3 / span 2;
               justify-self: flex-start;
               align-self: center;
             }
 
-            .filterInput > input {
+            /* .filterInput > paper-input {
               height: 20px;
-            }
+            } */
 
             .table-headers {
                 font-weight: bold;
@@ -201,7 +201,7 @@
             .sButton {
                 height: fit-content;
                 /* margin: 8px 0; */
-                height: 30px;
+                /* height: 30px; */
                 font-size: x-small;
                 white-space: nowrap;
                 min-width: 95px;
@@ -263,7 +263,6 @@
                 grid-column: span 6;
                 overflow: auto;
                 height: 50px;
-                
             }
 
             #cardContainer {
@@ -373,16 +372,29 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-
             }
 
             .selectionclearall {
                 height: 25px;
                 font-size: small;
             }
+
+            .resetFiltersItem {
+                display:inline;
+            }
+
+            .resetFiltersItem:hover {
+                cursor: pointer;
+                background-color: gray;
+                --paper-tag-item: {
+                    background-color: #bcbcbc;
+                    /* color: white; */
+                } 
+            }
         </style>
         <div class="container">
             <div id="filterContainer">
+                <h3 style="text-align: center;">Filter Measurements</h3>
                 <div id="searchbox">
                     <paper-input value="{{filterSearch}}" label="annotation" no-label-float>
                         <paper-icon-button icon="search" role="button" slot="prefix"></paper-icon-button>
@@ -421,187 +433,194 @@
                         </template>
                     </template>
                 </div>
-                <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
-                <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button>
+                <!-- <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
+                <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button> -->
             </div>
 
             <array-selector id="selector" items="{{tableData}}" selected="{{selectedItems}}" multi toggle></array-selector>
 
-            <div id="selectionContainer">
-                <div id="filtersList">
-                    <template is="dom-repeat" items="{{_filterCategories(filterStringArray.*, filters.*)}}" as="category" mutable-data>
-                        <iron-label>{{_getSanitizeItemName(category)}}:</iron-label>
-                        <paper-tags class="filterItems" items="[[_filterValues(category, filterStringArray.*)]]" prevent-remove-tag></paper-tags>
-                    </template>
-                </div>
-                <!-- <paper-menu-button style="display: none;" hidden$="[[!_showTable(layoutCard)]]" class="sItem sButton" id="columnSelector" ignore-select>
-                    <paper-button slot="dropdown-trigger">
-                        Columns
-                        <iron-icon icon="icons:expand-more"></iron-icon>
-                    </paper-button>
-                    <paper-listbox slot="dropdown-content">
-                        <template is="dom-repeat" items="[[defaultColumns]]" as="column">
-                            <paper-item class="columnSelection" role="menuitemcheckbox">
-                                <paper-checkbox name="{{column}}" checked on-click="toggleColumn">{{column}}</paper-checkbox>
-                            </paper-item>
+            <div>
+                <h3 style="text-align: center;">Add Measurements to Selection</h3>
+                <div id="selectionContainer">
+                    <div id="filtersList">
+                        <paper-tags class="resetFiltersItem" label-path="label" items='[{"label": "Reset Filters"}]' on-click="resetFilters" prevent-remove-tag></paper-tags>
+                        <template id="filterRepeater" is="dom-repeat" items="{{_filterCategories(filterStringArray.*, filters.*)}}" as="category" mutable-data>
+                            <iron-label>{{_getSanitizeItemName(category)}}:</iron-label>
+                            <paper-tags class="filterItems" on-items-changed="_removeFilterItem" items="[[_filterValues(category, filterStringArray.*)]]"></paper-tags>
                         </template>
-                    </paper-listbox>
-                </paper-menu-button> -->
-                
-
-                <paper-dropdown-menu name="sortColumn" class="sItem" label="Sort" value="{{sortCardColumn}}" no-animations
-                horizontal-align="left">
-                    <paper-listbox slot="dropdown-content">
-                        <template is="dom-repeat" items="[[defaultColumns]]">
-                            <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
+                    </div>
+                    <!-- <paper-menu-button style="display: none;" hidden$="[[!_showTable(layoutCard)]]" class="sItem sButton" id="columnSelector" ignore-select>
+                        <paper-button slot="dropdown-trigger">
+                            Columns
+                            <iron-icon icon="icons:expand-more"></iron-icon>
+                        </paper-button>
+                        <paper-listbox slot="dropdown-content">
+                            <template is="dom-repeat" items="[[defaultColumns]]" as="column">
+                                <paper-item class="columnSelection" role="menuitemcheckbox">
+                                    <paper-checkbox name="{{column}}" checked on-click="toggleColumn">{{column}}</paper-checkbox>
+                                </paper-item>
+                            </template>
+                        </paper-listbox>
+                    </paper-menu-button> -->
+                    
+    
+                    <paper-dropdown-menu name="sortColumn" class="sItem" label="Sort" value="{{sortCardColumn}}" no-animations
+                    horizontal-align="left">
+                        <paper-listbox slot="dropdown-content">
+                            <template is="dom-repeat" items="[[defaultColumns]]">
+                                <paper-item value$="[[item]]">[[_getSanitizeItemName(item)]]</paper-item>
+                            </template>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+                    <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
+                        <paper-listbox slot="dropdown-content" selected="1">
+                            <paper-item>Auto</paper-item>
+                            <paper-item>Manual</paper-item>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+                    <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" id="smode" class="sItem autoItem" on-value-changed="_sModeChanged" label="select ">
+                        <paper-listbox slot="dropdown-content" selected="0">
+                            <paper-item>Random %</paper-item>
+                            <paper-item>Random #</paper-item>
+                            <paper-item>Top %</paper-item>
+                            <paper-item>Top #</paper-item>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+                    <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
+                      class="sItem autoItem" label="Group by">
+                      <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
+                        <template is="dom-repeat" items="[[_attributesForGrouping]]" mutable-data>
+                          <paper-item class="groupBy" value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
                         </template>
-                    </paper-listbox>
-                </paper-dropdown-menu>
-                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem" on-value-changed="_sContainerChanged" label="Selection Type">
-                    <paper-listbox slot="dropdown-content" selected="1">
-                        <paper-item>Auto</paper-item>
-                        <paper-item>Manual</paper-item>
-                    </paper-listbox>
-                </paper-dropdown-menu>
-                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" id="smode" class="sItem autoItem" on-value-changed="_sModeChanged" label="select ">
-                    <paper-listbox slot="dropdown-content" selected="0">
-                        <paper-item>Random %</paper-item>
-                        <paper-item>Random #</paper-item>
-                        <paper-item>Top %</paper-item>
-                        <paper-item>Top #</paper-item>
-                    </paper-listbox>
-                </paper-dropdown-menu>
-                <paper-dropdown-menu disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
-                  class="sItem autoItem" label="Group by">
-                  <paper-listbox slot="dropdown-content" selected="{{_groupedBy}}">
-                    <template is="dom-repeat" items="[[_attributesForGrouping]]" mutable-data>
-                      <paper-item class="groupBy" value$="[[item]]">[[_getSanitizeItemName(item.name)]]</paper-item>
+                      </paper-listbox>
+                    </paper-dropdown-menu>
+                    <iron-label id="percentSelection" class="category-headers sItem autoItem">
+                        Selection [[selectionUnit.unit]]
+                        <paper-single-range-slider
+                        expand
+                            disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
+                            main-div-style="{ 'display': 'inline'}"
+                            id="sperc" class="sItem autoItem"
+                            pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
+                            name="selection [[selectionUnit.unit]]"
+                            label="selection [[selectionUnit.unit]]"
+                            min=[[selectionUnit.min]]
+                            max=[[selectionUnit.max]]
+                            value=[[selectionUnit.value]]
+                        ></paper-single-range-slider>
+                    </iron-label>
+                    <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
+    
+                    <template is="dom-if" if="[[_showPagination(pagination)]]">
+                      <div class="pagination">
+                        <div on-click="_decrementPage">
+                          <iron-icon icon="icons:chevron-left"></iron-icon>
+                        </div>
+                        <template is="dom-repeat" items="[[pages]]" as="page">
+                          <div active$="[[page.active]]" value="[[page.number]]" 
+                          on-click="_updatePagination">[[page.title]]</div>
+                        </template>
+                        <div on-click="_incrementPage">
+                          <iron-icon icon="icons:chevron-right"></iron-icon>
+                        </div>
+                      </div>
                     </template>
-                  </paper-listbox>
-                </paper-dropdown-menu>
-                <iron-label id="percentSelection" class="category-headers sItem autoItem">
-                    Selection [[selectionUnit.unit]]
-                    <paper-single-range-slider
-                    expand
-                        disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]"
-                        main-div-style="{ 'display': 'inline'}"
-                        id="sperc" class="sItem autoItem"
-                        pin="[[!_showCardSelectAll(_selected.*, tableData.*)]]"
-                        name="selection [[selectionUnit.unit]]"
-                        label="selection [[selectionUnit.unit]]"
-                        min=[[selectionUnit.min]]
-                        max=[[selectionUnit.max]]
-                        value=[[selectionUnit.value]]
-                    ></paper-single-range-slider>
-                </iron-label>
-                <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" class="sItem autoItem sButton" on-click="applySelection" raised>Apply Selection</paper-button>
-
-                <template is="dom-if" if="[[_showPagination(pagination)]]">
-                  <div class="pagination">
-                    <div on-click="_decrementPage">
-                      <iron-icon icon="icons:chevron-left"></iron-icon>
+                    <div class="filterInput">
+                      <!-- <input value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler" placeholder="search measurements" \> -->
+                      <paper-input no-label-float label="search measurements" value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler">
+                        <iron-icon icon="icons:search" slot="prefix"></iron-icon>
+                      </paper-input>
                     </div>
-                    <template is="dom-repeat" items="[[pages]]" as="page">
-                      <div active$="[[page.active]]" value="[[page.number]]" 
-                      on-click="_updatePagination">[[page.title]]</div>
-                    </template>
-                    <div on-click="_incrementPage">
-                      <iron-icon icon="icons:chevron-right"></iron-icon>
+                    
+                    <div class="cardselectall">
+                      <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" on-click="_cardSelectAll" raised>select All </paper-button>
                     </div>
-                  </div>
-                </template>
-                <div class="filterInput">
-                  <input value=[[measurementsSearch]] on-keyup="_measurementsSearchHandler" placeholder="search for measurements" \>
-                </div>
-                
-                <div class="cardselectall">
-                  <paper-button disabled="[[_showCardSelectAll(_selected.*, tableData.*)]]" on-click="_cardSelectAll" raised>select All </paper-button>
-                </div>
-              <!-- </div> -->
-                <template is="dom-if" if="[[_showTable(layoutCard)]]">
-
-                    <div id="tableContainer">
-                        <table class="gridtable">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <input type="checkbox" checked="[[_isAllSelected(selectedItems.*)]]" indeterminate="[[_isIndeterminate(selectedItems.*)]]"
-                                            on-click="_toggleSelectAll">
-                                    </th>
-                                    <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                        <th class="table-headers" on-click="sortColumn">
-                                            <span>[[_getSanitizeItemName(column)]]
-                                                <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
-                                            </span>
+                  <!-- </div> -->
+                    <template is="dom-if" if="[[_showTable(layoutCard)]]">
+    
+                        <div id="tableContainer">
+                            <table class="gridtable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <input type="checkbox" checked="[[_isAllSelected(selectedItems.*)]]" indeterminate="[[_isIndeterminate(selectedItems.*)]]"
+                                                on-click="_toggleSelectAll">
                                         </th>
-                                    </template>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
-                                    <tr on-click="toggleSelection">
-                                        <td>
-                                            <input class="row-check" type="checkbox">
-                                        </td>
                                         <template is="dom-repeat" items="[[showColumns]]" as="column">
-                                            <td>[[_getItem(row, column)]]</td>
+                                            <th class="table-headers" on-click="sortColumn">
+                                                <span>[[_getSanitizeItemName(column)]]
+                                                    <iron-icon class="small-icon" icon="icons:sort"></iron-icon>
+                                                </span>
+                                            </th>
                                         </template>
                                     </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                </template>
-   
-                <template is="dom-if" if="[[!_showTable(layoutCard)]]">
-                    <div id="cardContainer">
-                        <template is="dom-if" if="[[!_showCardsMeasurements(tableData.*, _selected.*)]]">
-                            <div style="text-align: center;">All measurement are either selected or choose a different chart or collection</div>
-                        </template>
-                        <template is="dom-if" if="[[_showCardsMeasurements(tableData.*, _selected.*)]]">
-                            <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_availableMeasurements]]" as="item">
-                                <paper-card>
-                                    <div class="content-card">
-                                        <span class="header-card">[[item.name]]</span><br/>
-                                        <span class="anno-card truncate-text" on-tap="_ToggleTruncate">[[_getAnnotationsAsString(item)]]</span>
+                                </thead>
+                                <tbody>
+                                    <template id="dataTable" is="dom-repeat" items="[[tableData]]" as="row" initial-count="30">
+                                        <tr on-click="toggleSelection">
+                                            <td>
+                                                <input class="row-check" type="checkbox">
+                                            </td>
+                                            <template is="dom-repeat" items="[[showColumns]]" as="column">
+                                                <td>[[_getItem(row, column)]]</td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+       
+                    <template is="dom-if" if="[[!_showTable(layoutCard)]]">
+                        <div id="cardContainer">
+                            <template is="dom-if" if="[[!_showCardsMeasurements(tableData.*, _selected.*)]]">
+                                <div style="text-align: center;">All measurement are either selected or choose a different chart or collection</div>
+                            </template>
+                            <template is="dom-if" if="[[_showCardsMeasurements(tableData.*, _selected.*)]]">
+                                <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_availableMeasurements]]" as="item">
+                                    <paper-card>
+                                        <div class="content-card">
+                                            <span class="header-card">[[item.name]]</span><br/>
+                                            <span class="anno-card truncate-text" on-tap="_ToggleTruncate">[[_getAnnotationsAsString(item)]]</span>
+                                        </div>
+                                        <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
+                                            <!-- <paper-button raised class="button-card" on-click="_addItemToSelection">
+                                                <iron-icon icon="icons:add"></iron-icon>
+                                            </paper-button> -->
+                                            <paper-icon-button icon="icons:add" on-click="_addItemToSelection"></paper-icon-button>
+                                        </template>
+                                    </paper-card>
+                                </template>                        
+                            </template>
+    
+                          <!--    <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+            
+                               <paper-card class="rate">
+                                    <div class="card-content">
+                                      <div class="name">[[item.name]]</div>
+                                        <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
+                                            <div>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]]</div>
+                                        </template>
                                     </div>
-                                    <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
-                                        <!-- <paper-button raised class="button-card" on-click="_addItemToSelection">
-                                            <iron-icon icon="icons:add"></iron-icon>
-                                        </paper-button> -->
-                                        <paper-icon-button icon="icons:add" on-click="_addItemToSelection"></paper-icon-button>
-                                    </template>
-                                </paper-card>
-                            </template>                        
-                        </template>
-
-                      <!--    <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
-        
-                           <paper-card class="rate">
-                                <div class="card-content">
-                                  <div class="name">[[item.name]]</div>
-                                    <template is="dom-repeat" items="[[_getAnnotations(item)]]" as="anno">
-                                        <div>[[_getSanitizeItemName(anno)]] : [[_getItemAnnotation(item, anno)]]</div>
-                                    </template>
-                                </div>
-                                <div class="card-actions">
-                                    <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
-                                        <paper-button on-click="_addItemToSelection">
-                                            <iron-icon icon="icons:check"></iron-icon>
-                                            Add to Selection
-                                        </paper-button>
-                                    </template>
-                                    <template restamp is="dom-if" if="{{_isItemSelected(item, _selected.*, tableData.*)}}">
-                                        <paper-button on-click="_removeItemFromSelection">
-                                            <iron-icon icon="icons:delete"></iron-icon>
-                                            Remove from Selection
-                                        </paper-button>
-                                    </template>
-                                </div>
-                              </paper-card> 
-                        </template>-->
-                    </div>
-                </template>
+                                    <div class="card-actions">
+                                        <template restamp is="dom-if" if="{{!_isItemSelected(item, _selected.*, tableData.*)}}">
+                                            <paper-button on-click="_addItemToSelection">
+                                                <iron-icon icon="icons:check"></iron-icon>
+                                                Add to Selection
+                                            </paper-button>
+                                        </template>
+                                        <template restamp is="dom-if" if="{{_isItemSelected(item, _selected.*, tableData.*)}}">
+                                            <paper-button on-click="_removeItemFromSelection">
+                                                <iron-icon icon="icons:delete"></iron-icon>
+                                                Remove from Selection
+                                            </paper-button>
+                                        </template>
+                                    </div>
+                                  </paper-card> 
+                            </template>-->
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <div id="selectedContainer">
@@ -1380,6 +1399,8 @@
                 } else {
                     this.filters[category].push(e.detail);
                 }
+
+                this.applyFilters();
             }
 
             /**
@@ -1451,6 +1472,7 @@
                     // self.tableData = self.flattenedData;
                     var sorted = self._sortTableData(self.flattenedData)
                     self.set("tableData", sorted);
+                    self.set("filterStringArray", []);
                     // self._sortColumnChanged();
                     // self.notifyPath("tableData");
                     // self.set("tableData", self.tableData);
@@ -1609,6 +1631,10 @@
 
                 this.set("tableData", this.flattenedData);
                 this.set("filterStringArray", []);
+            }
+
+            _removeFilterItem(e) {
+                this.applyFilters();
             }
 
             /**
