@@ -1642,6 +1642,8 @@
                     // TODO: figure out something smarter later
                     // very dumb to set it to undefined for now.
                     input.items = undefined;
+                    input.items = [];
+
                     input.items = self.filters["annotation." + elem.label];
                     if (!elem.items || (elem.items && elem.items.length == 0)) {
                         input.removeAll();
