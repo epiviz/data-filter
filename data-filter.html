@@ -1634,7 +1634,19 @@
             }
 
             _removeFilterItem(e) {
+                var self = this;
                 this.applyFilters();
+
+                this.shadowRoot.querySelectorAll("paper-tags-dropdown").forEach(function (elem) {
+                    var input = elem.shadowRoot.querySelector("paper-tags-input");
+                    // TODO: figure out something smarter later
+                    // very dumb to set it to undefined for now.
+                    input.items = undefined;
+                    input.items = self.filters["annotation." + elem.label];
+                    if (!elem.items || (elem.items && elem.items.length == 0)) {
+                        input.removeAll();
+                    }
+                });                
             }
 
             /**
