@@ -402,7 +402,7 @@
                     </paper-input>
                 </div>
                 <div id="filterOptions">
-                    <template is="dom-repeat" items="{{_getFilterItems(_attributes.*, filters.*)}}" mutable-data>
+                    <template is="dom-repeat" items="{{_getFilters(filters.*)}}" mutable-data>
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
@@ -411,6 +411,7 @@
                                 </div>
                             </paper-collapse-item>
                         </template>
+                      <!-- here -->
                         <template is="dom-if" if="[[_settingType(item.type, 'category')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" opened="{{item.opened}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
@@ -432,6 +433,8 @@
                             </paper-collapse-item>
                         </template>
                     </template>
+
+
                 </div>
                 <!-- <paper-button id="reset-button" raised on-click="resetFilters">Reset</paper-button>
                 <paper-button id="apply-button" raised on-click="applyFilters">Apply</paper-button> -->
@@ -593,7 +596,7 @@
                                 </template>                        
                             </template>
     
-                          <!--    <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
+                             <!-- <template mutable-data is="dom-repeat" id="cardRepeater" items="[[_getCardIterator(tableData.*, _selected.*)]]" as="item">
             
                                <paper-card class="rate">
                                     <div class="card-content">
@@ -617,7 +620,7 @@
                                         </template>
                                     </div>
                                   </paper-card> 
-                            </template>-->
+                            </template> -->
                         </div>
                     </template>
                 </div>
@@ -698,11 +701,17 @@
                     /** 
                      * List of filters set on the data 
                      */
-                    filters: {
+                    // filters: {
+                    //     type: Object,
+                    //     notify: true,
+                    //     value: {},
+                    //     observer: "_filtersChanged"
+                    // },
+                    filtersExt: {
                         type: Object,
                         notify: true,
                         value: {},
-                        observer: "_filtersChanged"
+                        observer: "_filtersExtChanged"
                     },
                     pagination: {
                       type: Object,
@@ -894,7 +903,6 @@
               }
               return pages;
             }
-            
             _showPagination(pagination) {
               return pagination.total_records > pagination.limit;
             }
@@ -925,7 +933,6 @@
             }
 
             _measurementsSearchHandler(e) {
-
               const val = e.target.value;
               this._debouncer = Polymer.Debouncer.debounce(
                 this._debouncer,
@@ -966,10 +973,10 @@
                 if (this._groupedBy !== 0) {
                   const annotationType = _attributes[this._groupedBy];
                   data.reduce((acc, attr) => {
-                    if(!acc[this._getSanitizeItemName(attr[annotationType.name])]) {
-                      acc[this._getSanitizeItemName(attr[annotationType.name])] = [];
+                    if(!acc[this._getSanitizeItemName(attr['annotation.' + annotationType.name])]) {
+                      acc[this._getSanitizeItemName(attr['annotation.' + annotationType.name])] = [];
                     }
-                    acc[this._getSanitizeItemName(attr[annotationType.name])].push(attr);
+                    acc[this._getSanitizeItemName(attr['annotation.' + annotationType.name])].push(attr);
                     return acc;
                   }, groupedByAnnotation);
                 } else {
@@ -978,45 +985,10 @@
               return groupedByAnnotation;
             }
 
-            _filtersChanged(newVal, oldVal) {
-                var self = this;
-                var filterString = [];
-
-                for (var key in this.filters) {
-                    var categoryFilters = []
-                    this.filters[key].forEach(function (val, index) {
-                        if (val !== "Any") {
-                            if (typeof (val) === "string") {
-                                categoryFilters.push("item['" + key + "'] == '" + val + "'");
-                            } else if (typeof (val) === "number") {
-                                if (index == 0) {
-                                    categoryFilters.push("item['" + key + "'] >= " + val);
-                                } else if (index == 1) {
-                                    categoryFilters[categoryFilters.length - 1] += " && item['" + key +
-                                        "'] <= " + val;
-                                }
-                            } else {
-                                categoryFilters.push("item['" + key + "'] == " + val);
-                            }
-                        }
-                    });
-                    if (categoryFilters.length !== 0) {
-                        filterString.push(categoryFilters);
-                    }
-                }
-
-                if (filterString.length === 0) {
-                    this.set("filterStringArray", []);
-                    return;
-                }
-
-                filterString.forEach(function (val, index) {
-                    filterString[index] = "(" + val.join(" || ") + ")";
-                });
-
-                this.set("filterStringArray", filterString);
+            _filtersExtChanged(newVal, oldVal) {
+              console.log('EXT filter', newVal, oldVal);
             }
-
+            
             _attributesChanged(newVal, oldVal) {
               this.set('_groupedBy', 0);
             }
@@ -1037,8 +1009,12 @@
                 return res.sort();
             }
 
-            _getFilterItems(_attributes, filters) {
+            _getFilterItems(_attributes) {
                 return this._attributes;
+            }
+
+            _getFilters(filters) {
+                return this.filters;
             }
 
             _showTable(layoutCard) {
@@ -1204,7 +1180,7 @@
 
 
             _getSanitizeItemName(name) {
-                return name.replace("annotation.", "")
+              return name && name.replace("annotation.", "")
             }
 
             /**
@@ -1383,25 +1359,36 @@
                 }
             }
 
+            _getFilter(name) {
+              return this.filters.find(filter => filter.name === name)
+            }
+
             /**
              * Handler to add a new filter.
              */
             addFilter(e) {
                 var category = e.target.name;
+                var {target} = e;
 
-                if (e.target.type === "number") {
+                if (target.type == undefined) {
+                  return;
+                }
+                if (target.type === "number") {
                     if (parseInt(e.detail)) {
-                        this.filters[category].push(parseInt(e.detail));
+                      //  get number
+                        this.filtersExt[category].push(parseInt(e.detail));
                     }
-                } else if (e.target.type === "category") {
-                    if (e.target.valueArray.length > 0) {
-                        this.filters[category] = e.target.valueArray;
+                } else if (target.type === "category") {
+                    if (target.valueArray.length > 0) {
+                        //get array
+                        this.filtersExt[category] = target.valueArray;
                     }
                 } else {
-                    this.filters[category].push(e.detail);
+                    this.filtersExt[category].push(e.detail);
                 }
 
                 this.applyFilters();
+               this.set('filtersExt', {...this.filtersExt});
             }
 
             /**
@@ -1441,17 +1428,18 @@
              * Handler to apply all selected filters to the `data`
              */
             applyFilters() {
+              /*
                 var self = this;
                 var filterString = [];
                 // self.selectedItems = [];
-                self._deselectAll();
+                // self._deselectAll();
 
                 for (var key in this.filters) {
                     var categoryFilters = []
                     this.filters[key].forEach(function (val, index) {
                         if (val !== "Any") {
                             if (typeof (val) === "string") {
-                                categoryFilters.push('item["' + key + '"].includes("' + val + '")');
+                                categoryFilters.push('item["' + key + '"] == "' + val + '"');
                             } else if (typeof (val) === "number") {
                                 if (index == 0) {
                                     categoryFilters.push("item['" + key + "'] >= " + val);
@@ -1494,6 +1482,8 @@
 
                 self._sortColumnChanged();
                 self.set("tableData", self.tableData);
+                // self.set("filters", self.filters);
+                */
             }
 
             _normalizeUnitName(unitName) {
@@ -1704,17 +1694,12 @@
                 this.set("_groupedBy", 0);
                 var data = self.data;
 
-                // self._selected = {};
-                // sanitize data - flatten array
-
                 data = data.map(self._flattenObject);
                 data = self._replaceNull(data);
                 self.showColumns = [];
-                self.resetFilters();
 
                 this.set('flattenedData', data);
-                // self.tableData = self.flattenedData;
-                self.applyFilters();
+                this.set("tableData", data);
 
                 var allColumns = []
                 self.tableData.forEach(function(td) {
@@ -1727,12 +1712,10 @@
                     self.set("showColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "type"].includes(e); }));
                     self.set("defaultColumns", allColumns.filter(function(e) { return !["annotation._filetype", "id", "annotation.collection", "type"].includes(e); }));
                 }
+                if (this.filters) {
+                  self.set("_attributes", [...this.filters]);
+                }
 
-                var attributes = self._buildAttributes(self.flattenedData, self.showColumns);
-                // self._attributes = attributes;
-                self.set("_attributes", attributes);
-
-                // TODO: Replace with polymer's this.async
                 setTimeout(function () {
                     var prs = self.shadowRoot.querySelectorAll(".slider");
                     for (var i = 0; i < prs.length; i++) {
@@ -1765,10 +1748,10 @@
                 this.set("filterSearch", '');
             }
 
-            _createCategoricalAttribute(key, parsedData, isArray) {
+            _createCategoricalAttribute(key, parsedData) {
               return {
                   "name": key,
-                  "type": isArray ? "category-array" : "category",
+                  "type": "category",
                   "values": _.filter(_.uniq(parsedData[key]), (o) => {
                       return !(o === undefined)
                   }),
@@ -1790,7 +1773,6 @@
              * Generate attrivbutes from the data array and figure out column types.
              * @protected
              */
-            //here
             _buildAttributes(data, columns) {
                 const numberDataThreshhold = 5;
                 var self = this;
@@ -1802,19 +1784,9 @@
                 });
 
                 columns.forEach((key) => {
-
-                    var isArray = false;
                     parsedData[key] = data.map(function (x) {
-                        if (Array.isArray(x[key])) {
-                            isArray = true;
-                        }
                         return x[key];
                     });
-
-                    if (isArray){
-                        parsedData[key] = _.flatten(parsedData[key]);
-                    }
-
                     var isNum = !parsedData[key].some(isNaN);
                     self.filters[key] = [];
 
@@ -1836,7 +1808,7 @@
                           "hidden": false,
                         });
                       } else {
-                        var tattr = this._createCategoricalAttribute(key, parsedData, isArray);
+                        var tattr = this._createCategoricalAttribute(key, parsedData);
                             if (tattr.values.length > 1) {
                                 attributes.push(tattr)
                             }                      
@@ -1874,11 +1846,10 @@
                     if (Object(cur) !== cur) {
                         result[prop] = cur;
                     } else if (Array.isArray(cur)) {
-                        result[prop] = cur;
-                        // for (var i = 0, l = cur.length; i < l; i++)
-                            // _flatten(cur[i], prop + "[" + i + "]");
-                        // if (l == 0)
-                        //     result[prop] = [];
+                        for (var i = 0, l = cur.length; i < l; i++)
+                            _flatten(cur[i], prop + "[" + i + "]");
+                        if (l == 0)
+                            result[prop] = [];
                     } else {
                         var isEmpty = true;
                         for (var p in cur) {
