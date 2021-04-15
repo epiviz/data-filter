@@ -447,7 +447,7 @@
                 <div id="selectionContainer">
                     <div id="filtersList">
                         <paper-tags class="resetFiltersItem" label-path="label" items='[{"label": "Reset Filters"}]' on-click="resetFilters" prevent-remove-tag></paper-tags>
-                        <template id="filterRepeater" is="dom-repeat" items="{{_filterCategories(filterStringArray.*, filters.*)}}" as="category" mutable-data>
+                        <template id="filterRepeater" is="dom-repeat" items="{{_filterCategories(filtersExt.*)}}" as="category" mutable-data>
                             <iron-label>{{_getSanitizeItemName(category)}}:</iron-label>
                             <paper-tags class="filterItems" on-items-changed="_removeFilterItem" items="[[_filterValues(category, filterStringArray.*)]]"></paper-tags>
                         </template>
@@ -1199,10 +1199,10 @@
              * Currently applied filters.
              * @protected
              */
-            _filterCategories(filters, fs) {
+            _filterCategories(filtersExt) {
                 var categories = [];
-                Object.keys(this.filters).forEach((item) => {
-                    if (this.filters[item].length > 0) {
+                Object.keys(this.filtersExt).forEach((item) => {
+                    if (this.filtersExt[item].length > 0) {
                         categories.push(item);
                     }
                 })
@@ -1218,11 +1218,12 @@
              */
             _filterValues(category, filterStringArray) {
                 //filter string array is not used, it's just to trigger rerender of dom-repeat
+
                 var filter;
-                if (typeof (this.filters[category][0]) === "number") {
-                    filter = [this.filters[category].join('-')];
+                if (typeof (this.filtersExt[category][0]) === "number") {
+                    filter = [this.filtersExt[category].join('-')];
                 } else {
-                    filter = this.filters[category];
+                    filter = this.filtersExt[category];
                 }
 
                 return filter;
@@ -1602,13 +1603,13 @@
             resetFilters(e) {
                 var self = this;
 
-                for (var key in this.filters) {
-                    this.filters[key] = [];
-                }
-
                 this.shadowRoot.querySelectorAll("paper-tags-dropdown").forEach(function (elem) {
                     var input = elem.shadowRoot.querySelector("paper-tags-input");
-                    input.removeAll();
+                    elem.parentElement.parentElement.opened = false;
+                    if(input && input.items) {
+                        input.removeAll();
+
+                    }
                 });
 
                 this.shadowRoot.querySelectorAll(".slider").forEach(function (elem) {
@@ -1635,11 +1636,14 @@
                     input.items = undefined;
                     input.items = [];
 
-                    input.items = self.filters["annotation." + elem.label];
+                    input.items = self.filtersExt[elem.label];
                     if (!elem.items || (elem.items && elem.items.length == 0)) {
                         input.removeAll();
+                        delete self.filtersExt[elem.label]
                     }
                 });                
+
+                self.set('filtersExt', { ...self.filtersExt});
             }
 
             /**
