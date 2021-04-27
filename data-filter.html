@@ -402,7 +402,7 @@
                     </paper-input>
                 </div>
                 <div id="filterOptions">
-                    <template is="dom-repeat" items="{{_getFilters(filters.*)}}" mutable-data>
+                    <template is="dom-repeat" items="{{_getFilters(filters.*, _attributes.*)}}" mutable-data>
                         <template is="dom-if" if="[[_settingType(item.type, 'boolean')]]">
                             <paper-collapse-item header="{{_getSanitizeItemName(item.name)}}" hidden$="{{item.hidden}}">
                                 <div class="flexchild-vertical collapse-content">
@@ -705,7 +705,7 @@
                     //     type: Object,
                     //     notify: true,
                     //     value: {},
-                    //     observer: "_filtersChanged"
+                    //     // observer: "_filtersChanged"
                     // },
                     filtersExt: {
                         type: Object,
@@ -994,7 +994,7 @@
             }
 
             _getItemValue(item) {
-                return this.filters[item.name];
+                return item.values;
             }
 
             _getItems(item) {
@@ -1013,8 +1013,8 @@
                 return this._attributes;
             }
 
-            _getFilters(filters) {
-                return this.filters;
+            _getFilters(filters, attributes) {
+                return this._attributes;
             }
 
             _showTable(layoutCard) {
