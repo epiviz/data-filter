@@ -447,9 +447,9 @@
                 <div id="selectionContainer">
                     <div id="filtersList">
                         <paper-tags class="resetFiltersItem" label-path="label" items='[{"label": "Reset Filters"}]' on-click="resetFilters" prevent-remove-tag></paper-tags>
-                        <template id="filterRepeater" is="dom-repeat" items="{{_filterCategories(filtersExt.*)}}" as="category" mutable-data>
-                            <iron-label>{{_getSanitizeItemName(category)}}:</iron-label>
-                            <paper-tags class="filterItems" on-items-changed="_removeFilterItem" items="[[_filterValues(category, filterStringArray.*)]]"></paper-tags>
+                        <template id="filterRepeater" is="dom-repeat" items="[[_filterCategories(filtersExt.*)]]" as="item" mutable-data>
+                            <iron-label>[[_getSanitizeItemName(item.name)]]:</iron-label>
+                            <paper-tags class="filterItems" on-items-changed="_removeFilterItem" items="[[_filterValues(item, filterStringArray.*)]]"></paper-tags>
                         </template>
                     </div>
                     <!-- <paper-menu-button style="display: none;" hidden$="[[!_showTable(layoutCard)]]" class="sItem sButton" id="columnSelector" ignore-select>
@@ -994,7 +994,7 @@
             }
 
             _getItemValue(item) {
-                return item.values;
+                return JSON.parse(JSON.stringify(this.filtersExt[item.name] ? this.filtersExt[item.name] : []));
             }
 
             _getItems(item) {
@@ -1178,10 +1178,18 @@
                 return Object.keys(this._selected).includes(item.id);
             }
 
-
             _getSanitizeItemName(name) {
-              return name && name.replace("annotation.", "")
+                // console.log(name);
+                if (typeof name === 'object') {
+                    return name.name.replace("annotation.", "")
+                }
+
+                return name && name.replace("annotation.", "")
             }
+
+            // _getSanitizeItemCatName(cat) {
+            //     return cat.name && cat.name.replace("annotation.", "")
+            // }
 
             /**
              * Handler to sort columns in the table.
@@ -1203,7 +1211,10 @@
                 var categories = [];
                 Object.keys(this.filtersExt).forEach((item) => {
                     if (this.filtersExt[item].length > 0) {
-                        categories.push(item);
+                        categories.push({
+                            "name": item,
+                            "value": this.filtersExt[item]
+                        });
                     }
                 })
                 return categories;
@@ -1220,10 +1231,10 @@
                 //filter string array is not used, it's just to trigger rerender of dom-repeat
 
                 var filter;
-                if (typeof (this.filtersExt[category][0]) === "number") {
-                    filter = [this.filtersExt[category].join('-')];
+                if (typeof (this.filtersExt[category.name][0]) === "number") {
+                    filter = [this.filtersExt[category.name].join('-')];
                 } else {
-                    filter = this.filtersExt[category];
+                    filter = this.filtersExt[category.name];
                 }
 
                 return filter;
@@ -1371,25 +1382,27 @@
                 var category = e.target.name;
                 var {target} = e;
 
+                var currFilters = JSON.parse(JSON.stringify(this.filtersExt));
+
                 if (target.type == undefined) {
                   return;
                 }
                 if (target.type === "number") {
                     if (parseInt(e.detail)) {
-                      //  get number
-                        this.filtersExt[category].push(parseInt(e.detail));
+                        //  get number
+                        currFilters[category].push(parseInt(e.detail));
                     }
                 } else if (target.type === "category") {
                     if (target.valueArray.length > 0) {
                         //get array
-                        this.filtersExt[category] = target.valueArray;
+                        currFilters[category] = target.valueArray;
                     }
                 } else {
-                    this.filtersExt[category].push(e.detail);
+                    currFilters[category].push(e.detail);
                 }
 
-                this.applyFilters();
-               this.set('filtersExt', {...this.filtersExt});
+                // this.applyFilters();
+                this.set('filtersExt', currFilters);
             }
 
             /**
@@ -1623,6 +1636,7 @@
 
                 this.set("tableData", this.flattenedData);
                 this.set("filterStringArray", []);
+                this.set("filtersExt", {});
             }
 
             _removeFilterItem(e) {
