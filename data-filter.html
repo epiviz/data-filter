@@ -701,12 +701,12 @@
                     /** 
                      * List of filters set on the data 
                      */
-                    // filters: {
-                    //     type: Object,
-                    //     notify: true,
-                    //     value: {},
-                    //     // observer: "_filtersChanged"
-                    // },
+                    filters: {
+                        type: Array,
+                        notify: true,
+                        value: [],
+                        observer: "_filtersChanged"
+                    },
                     filtersExt: {
                         type: Object,
                         notify: true,
@@ -986,7 +986,7 @@
             }
 
             _filtersExtChanged(newVal, oldVal) {
-              console.log('EXT filter', newVal, oldVal);
+              console.log('data-filter: EXT filter', newVal, oldVal);
             }
             
             _attributesChanged(newVal, oldVal) {
@@ -1402,7 +1402,10 @@
                 }
 
                 // this.applyFilters();
+                // this.set('filtersExt', {...this.filtersExt});
                 this.set('filtersExt', currFilters);
+                // this.set('filtersExt', this.filtersExt);
+                // this.notifyPath("filtersExt");
             }
 
             /**
@@ -1641,23 +1644,26 @@
 
             _removeFilterItem(e) {
                 var self = this;
-                this.applyFilters();
+                // this.applyFilters();
+                var currentFilters = JSON.parse(JSON.stringify(self.filtersExt));
 
                 this.shadowRoot.querySelectorAll("paper-tags-dropdown").forEach(function (elem) {
                     var input = elem.shadowRoot.querySelector("paper-tags-input");
+                    elem.parentElement.parentElement.opened = false;
                     // TODO: figure out something smarter later
                     // very dumb to set it to undefined for now.
                     input.items = undefined;
                     input.items = [];
 
-                    input.items = self.filtersExt[elem.label];
+                    input.items = currentFilters[elem.label];
                     if (!elem.items || (elem.items && elem.items.length == 0)) {
                         input.removeAll();
-                        delete self.filtersExt[elem.label]
+                        delete currentFilters[elem.label]
                     }
-                });                
+                });       
 
-                self.set('filtersExt', { ...self.filtersExt});
+                self.set('filtersExt', {});
+                self.set('filtersExt', currentFilters);
             }
 
             /**
@@ -1701,6 +1707,12 @@
                 // elems.forEach(function (elem) {
                 //     elem.checked = false;
                 // });
+            }
+
+            _filtersChanged(newVal, oldVal) {
+                if (this.filters) {
+                  this.set("_attributes", this.filters);
+                }
             }
 
             /**
